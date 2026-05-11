@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.AgroTechAI" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.AgroTechAI.Splash" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@drawable/ttttt</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowSplashScreenBackground">#2E7D32</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ttttt</item>
+    </style>
+</resources>
