@@ -33,6 +33,8 @@ fun DashboardScreen(navController: NavController, viewModel: AgroViewModel) {
     val strings = LocalAppStrings.current
     val weather by viewModel.weatherState.collectAsState()
     val user by viewModel.userState.collectAsState()
+    val error by viewModel.errorState.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
     
     // Fetch weather data on startup
     LaunchedEffect(Unit) {
@@ -109,13 +111,37 @@ fun DashboardScreen(navController: NavController, viewModel: AgroViewModel) {
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = strings.dashboard,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = strings.dashboard,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            IconButton(
+                                onClick = { viewModel.fetchWeather(28.6139, 77.2090) },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                if (isRefreshing) {
+                                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                                } else {
+                                    Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                }
+                            }
+                        }
+
+                        error?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                        }
                         Row(modifier = Modifier.fillMaxWidth()) {
                             MetricItem(
                                 title = strings.soilMoisture,

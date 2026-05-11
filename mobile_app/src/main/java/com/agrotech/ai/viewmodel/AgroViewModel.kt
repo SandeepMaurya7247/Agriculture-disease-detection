@@ -31,6 +31,12 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing
+
+    private val _errorState = MutableStateFlow<String?>(null)
+    val errorState: StateFlow<String?> = _errorState
+
     // ── Selected language ──
     private val _selectedLanguage = MutableStateFlow("en")
     val selectedLanguage: StateFlow<String> = _selectedLanguage
@@ -104,13 +110,20 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
 
     fun fetchWeather(lat: Double, lon: Double) {
         viewModelScope.launch {
+            _isRefreshing.value = true
+            _errorState.value = null
             try {
                 val response = repository.getWeather(lat, lon)
                 if (response.isSuccessful) {
                     _weatherState.value = response.body()
+                } else {
+                    _errorState.value = "Failed to fetch weather: ${response.code()}"
                 }
             } catch (e: Exception) {
+                _errorState.value = "Network Error: Check internet connection"
                 e.printStackTrace()
+            } finally {
+                _isRefreshing.value = false
             }
         }
     }
