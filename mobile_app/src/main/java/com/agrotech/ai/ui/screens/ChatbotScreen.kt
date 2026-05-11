@@ -20,15 +20,37 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import android.speech.tts.TextToSpeech
+import java.util.Locale
+import androidx.compose.ui.platform.LocalContext
 import com.agrotech.ai.data.model.ChatMessage
 import com.agrotech.ai.viewmodel.AgroViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatbotScreen(navController: NavController, viewModel: AgroViewModel) {
+    val context = LocalContext.current
     val messages by viewModel.chatMessages.collectAsState()
     var text by remember { mutableStateOf("") }
     var isHindi by remember { mutableStateOf(false) }
+
+    // TTS Setup
+    val tts = remember {
+        var ttsInstance: TextToSpeech? = null
+        ttsInstance = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                ttsInstance?.language = if (isHindi) Locale("hi", "IN") else Locale.US
+            }
+        }
+        ttsInstance
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            tts?.stop()
+            tts?.shutdown()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -60,6 +82,15 @@ fun ChatbotScreen(navController: NavController, viewModel: AgroViewModel) {
                     }
                 },
                 actions = {
+                    IconButton(onClick = {
+                        val lastBotMessage = messages.lastOrNull { !it.isUser }?.text
+                        if (lastBotMessage != null) {
+                            tts?.language = if (isHindi) Locale("hi", "IN") else Locale.US
+                            tts?.speak(lastBotMessage, TextToSpeech.QUEUE_FLUSH, null, null)
+                        }
+                    }) {
+                        Icon(Icons.Default.VolumeUp, contentDescription = "Speak", tint = MaterialTheme.colorScheme.primary)
+                    }
                     TextButton(onClick = { isHindi = !isHindi }) {
                         Text(if (isHindi) "हिन्दी" else "EN", fontWeight = FontWeight.Bold)
                     }
