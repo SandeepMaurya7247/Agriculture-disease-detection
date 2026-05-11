@@ -207,38 +207,73 @@ def detect_stress():
     if not image_base64:
         return jsonify({"success": False, "error": "No image data"}), 400
     
-    # 1. Upload to Cloudinary
+    # 1. Upload to Cloudinary (for history)
     image_url = upload_image(image_base64)
     
-    if not image_url:
-        return jsonify({"success": False, "error": "Failed to upload image"}), 500
+    # 2. Local TFLite Inference
+    try:
+        import tflite_runtime.interpreter as tflite
+        model_path = os.path.join(os.path.dirname(__file__), 'ml', 'model', 'crop_stress_mobilenet.tflite')
+        
+        if not os.path.exists(model_path):
+            return jsonify({
+                "success": False, 
+                "error": "TFLite model file missing. Please wait for training and conversion to finish."
+            }), 500
 
-    # 2. Heuristic or ML detection (For now using Gemini as in the original main.py, 
-    # but could be replaced with moblitnet_dl.py)
-    prompt = """
-    Identify any crop stress, disease, or pest in this image. 
-    Provide: 1. Disease Name, 2. Severity (High/Medium/Low), 3. Action Plan.
-    Keep it concise for a mobile UI.
-    """
-    
-    # Passing the original base64 to Gemini (as it doesn't take URLs easily without File API)
-    # But we have successfully saved the URL in Cloudinary for our logs.
-    analysis = AgroBackend.get_gemini_response(prompt, image_base64)
-    
-    # 3. Save to MongoDB
-    analysis_data = {
-        "image_url": image_url,
-        "analysis": analysis,
-        "timestamp": datetime.utcnow()
-    }
-    save_stress_analysis(analysis_data)
-    
-    return jsonify({
-        "success": True,
-        "analysis": analysis,
-        "image_url": image_url,
-        "timestamp": analysis_data["timestamp"].strftime("%Y-%m-%d %H:%M:%S")
-    })
+        # Load TFLite model
+        interpreter = tflite.Interpreter(model_path=model_path)
+        interpreter.allocate_tensors()
+        
+        # Prepare image
+        img_data = base64.b64decode(image_base64)
+        img = Image.open(io.BytesIO(img_data)).resize((224, 224))
+        img_array = np.array(img, dtype=np.float32) / 255.0
+        img_array = np.expand_dims(img_array, axis=0)
+        
+        # Run inference
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
+        interpreter.set_tensor(input_details[0]['index'], img_array)
+        interpreter.invoke()
+        output_data = interpreter.get_tensor(output_details[0]['index'])
+        
+        # Class Mapping
+        classes = ["Bacterial Leaf Blight", "Brown Spot", "Healthy Leaf", "Leaf Smut", "Other Disease"]
+        class_idx = np.argmax(output_data[0])
+        confidence = float(output_data[0][class_idx]) * 100
+        
+        disease = classes[class_idx]
+        
+        # Action Plans
+        action_plans = {
+            "Bacterial Leaf Blight": "Use copper-based fungicides. Avoid over-fertilization with nitrogen.",
+            "Brown Spot": "Improve soil fertility. Apply balanced NPK fertilizers. Use certified seeds.",
+            "Healthy Leaf": "No stress detected. Continue regular monitoring and watering.",
+            "Leaf Smut": "Usually minor damage. If severe, apply appropriate fungicides and use clean seeds.",
+            "Other Disease": "Unidentified stress detected. Please consult a local agriculture expert."
+        }
+        
+        analysis = f"**Disease**: {disease}\n**Confidence**: {confidence:.1f}%\n**Action Plan**: {action_plans.get(disease, 'N/A')}"
+
+        # 3. Save to MongoDB
+        analysis_data = {
+            "image_url": image_url,
+            "analysis": analysis,
+            "timestamp": datetime.utcnow()
+        }
+        save_stress_analysis(analysis_data)
+        
+        return jsonify({
+            "success": True,
+            "analysis": analysis,
+            "image_url": image_url,
+            "timestamp": analysis_data["timestamp"].strftime("%Y-%m-%d %H:%M:%S")
+        })
+
+    except Exception as e:
+        print(f"TFLite Inference Error: {e}")
+        return jsonify({"success": False, "error": f"Local AI Processing Failed: {str(e)}"}), 500
 
 # ----------------------------
 # 💬 ADVANCED CHATBOT MODULE (Tavily + Groq + LangGraph)

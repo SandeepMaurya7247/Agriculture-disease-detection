@@ -15,8 +15,7 @@ langchain
 langchain-huggingface
 langchain-community
 langchain-groq
-tensorflow
-keras
+tflite-runtime
 gunicorn
 tavily-python
 langgraph
