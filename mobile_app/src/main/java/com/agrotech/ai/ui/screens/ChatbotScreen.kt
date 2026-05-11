@@ -26,6 +26,11 @@ import androidx.compose.ui.platform.LocalContext
 import com.agrotech.ai.data.model.ChatMessage
 import com.agrotech.ai.viewmodel.AgroViewModel
 
+import android.content.Intent
+import android.speech.RecognizerIntent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatbotScreen(navController: NavController, viewModel: AgroViewModel) {
@@ -33,6 +38,19 @@ fun ChatbotScreen(navController: NavController, viewModel: AgroViewModel) {
     val messages by viewModel.chatMessages.collectAsState()
     var text by remember { mutableStateOf("") }
     var isHindi by remember { mutableStateOf(false) }
+
+    // Speech to Text Launcher
+    val speechLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val data = result.data
+            val results = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            if (!results.isNullOrEmpty()) {
+                text = results[0]
+            }
+        }
+    }
 
     // TTS Setup
     val tts = remember {
@@ -163,7 +181,14 @@ fun ChatbotScreen(navController: NavController, viewModel: AgroViewModel) {
                             unfocusedIndicatorColor = Color.Transparent
                         ),
                         trailingIcon = {
-                            IconButton(onClick = { /* Voice recognition */ }) {
+                            IconButton(onClick = {
+                                val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, if (isHindi) "hi-IN" else "en-US")
+                                    putExtra(RecognizerIntent.EXTRA_PROMPT, if (isHindi) "बोलिए..." else "Speak now...")
+                                }
+                                speechLauncher.launch(intent)
+                            }) {
                                 Icon(Icons.Default.Mic, contentDescription = "Voice", tint = MaterialTheme.colorScheme.primary)
                             }
                         }
