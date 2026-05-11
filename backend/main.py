@@ -268,6 +268,8 @@ def web_search(query: str):
 Base_prompt = """
 You are an expert agriculture assistant.
 Give practical, region-aware, farmer-friendly advice.
+If you need current information, ALWAYS use the web_search tool.
+Do not show the tool call tags to the user, just give the final answer after searching.
 Always ask clarifying questions if data is missing.
 Avoid medical or chemical overdose advice.
 """
@@ -275,7 +277,7 @@ Avoid medical or chemical overdose advice.
 # LLM (Groq)
 try:
     llm = ChatGroq(
-        model="llama-3.1-8b-instant",
+        model="llama-3.3-70b-versatile",
         temperature=0.4
     )
 except Exception as e:
