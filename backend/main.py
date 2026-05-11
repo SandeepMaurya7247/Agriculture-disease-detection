@@ -210,35 +210,32 @@ def detect_stress():
     # 1. Upload to Cloudinary (for history)
     image_url = upload_image(image_base64)
     
-    # 2. Local TFLite Inference
+    # 2. Local ONNX Inference
     try:
-        import tflite_runtime.interpreter as tflite
-        model_path = os.path.join(os.path.dirname(__file__), 'ml', 'model', 'crop_stress_mobilenet.tflite')
+        import onnxruntime as ort
+        model_path = os.path.join(os.path.dirname(__file__), 'ml', 'model', 'crop_stress_mobilenet.onnx')
         
         if not os.path.exists(model_path):
             return jsonify({
                 "success": False, 
-                "error": "TFLite model file missing. Please wait for training and conversion to finish."
+                "error": "ONNX model file missing. Deployment in progress."
             }), 500
 
-        # Load TFLite model
-        interpreter = tflite.Interpreter(model_path=model_path)
-        interpreter.allocate_tensors()
+        # Load ONNX model
+        session = ort.InferenceSession(model_path)
         
-        # Prepare image
+        # Prepare image (resize to 224x224 and normalize)
         img_data = base64.b64decode(image_base64)
         img = Image.open(io.BytesIO(img_data)).resize((224, 224))
         img_array = np.array(img, dtype=np.float32) / 255.0
-        img_array = np.expand_dims(img_array, axis=0)
+        img_array = np.expand_dims(img_array, axis=0) # Add batch dimension
         
         # Run inference
-        input_details = interpreter.get_input_details()
-        output_details = interpreter.get_output_details()
-        interpreter.set_tensor(input_details[0]['index'], img_array)
-        interpreter.invoke()
-        output_data = interpreter.get_tensor(output_details[0]['index'])
+        input_name = session.get_inputs()[0].name
+        output_name = session.get_outputs()[0].name
+        output_data = session.run([output_name], {input_name: img_array})[0]
         
-        # Class Mapping
+        # Class Mapping (Rice Leaf Diseases)
         classes = ["Bacterial Leaf Blight", "Brown Spot", "Healthy Leaf", "Leaf Smut", "Other Disease"]
         class_idx = np.argmax(output_data[0])
         confidence = float(output_data[0][class_idx]) * 100
@@ -272,7 +269,7 @@ def detect_stress():
         })
 
     except Exception as e:
-        print(f"TFLite Inference Error: {e}")
+        print(f"ONNX Inference Error: {e}")
         return jsonify({"success": False, "error": f"Local AI Processing Failed: {str(e)}"}), 500
 
 # ----------------------------

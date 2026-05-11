@@ -15,7 +15,7 @@ langchain
 langchain-huggingface
 langchain-community
 langchain-groq
-tflite-runtime
+onnxruntime
 gunicorn
 tavily-python
 langgraph
