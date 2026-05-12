@@ -116,11 +116,14 @@ def signup():
 
 @app.route('/api/weather/current', methods=['GET'])
 def get_weather():
-    lat = request.args.get('lat', '28.6139') # Default to New Delhi
+    lat = request.args.get('lat', '28.6139')
     lon = request.args.get('lon', '77.2090')
     api_key = os.getenv("WEATHER_API_KEY")
     
-    url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}&units=metric"
+    if not api_key:
+        return jsonify({"error": "Weather API Key is missing in environment variables"}), 500
+        
+    url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}&units=metric"
     
     try:
         r = requests.get(url, timeout=10)
@@ -131,14 +134,16 @@ def get_weather():
                 "humidity": data['main']['humidity'],
                 "condition": data['weather'][0]['main'],
                 "windSpeed": data['wind']['speed'],
-                "iconUrl": f"http://openweathermap.org/img/wn/{data['weather'][0]['icon']}@2x.png",
+                "iconUrl": f"https://openweathermap.org/img/wn/{data['weather'][0]['icon']}@2x.png",
                 "location": data.get('name', 'Unknown Location'),
                 "pressure": data['main']['pressure'],
                 "description": data['weather'][0]['description']
             }
             return jsonify(weather)
-        return jsonify({"error": "Failed to fetch weather data"}), r.status_code
+        print(f"Weather API Error: {r.status_code} - {r.text}")
+        return jsonify({"error": f"Weather API Failed: {r.status_code}", "detail": r.text}), r.status_code
     except Exception as e:
+        print(f"Weather Internal Error: {e}")
         return jsonify({"error": str(e)}), 500
 
 # ----------------------------
