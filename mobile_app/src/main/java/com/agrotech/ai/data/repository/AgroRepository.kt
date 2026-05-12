@@ -21,8 +21,8 @@ class AgroRepository(private val apiService: ApiService) {
     suspend fun getFertilizerRec(data: Map<String, Any>): Response<RecommendationResponse> = 
         apiService.getFertilizerRecommendation(data)
 
-    suspend fun detectStress(imageUrl: String): Response<StressDetectionResponse> = 
-        apiService.detectStress(mapOf("image_url" to imageUrl))
+    suspend fun detectStress(base64Image: String): Response<StressDetectionResponse> = 
+        apiService.detectStress(mapOf("image" to base64Image))
 
     suspend fun chat(query: String, lang: String): String {
         val response = apiService.queryChatbot(mapOf("query" to query, "lang" to lang))

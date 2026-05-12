@@ -154,18 +154,41 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
         }
     }
 
-    fun detectStress(imageUrl: String) {
+    fun detectStress(imageUri: String, context: android.content.Context) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val response = repository.detectStress(imageUrl)
-                if (response.isSuccessful) {
-                    _stressResult.value = response.body()
+                // Convert URI to Base64
+                val base64Image = convertUriToBase64(imageUri, context)
+                if (base64Image != null) {
+                    val response = repository.detectStress(base64Image)
+                    if (response.isSuccessful) {
+                        _stressResult.value = response.body()
+                    } else {
+                        _errorState.value = "AI Analysis Failed: ${response.code()}"
+                    }
+                } else {
+                    _errorState.value = "Failed to process image"
                 }
             } catch (e: Exception) {
+                _errorState.value = "Error: ${e.message}"
                 e.printStackTrace()
             }
             _isLoading.value = false
+        }
+    }
+
+    private fun convertUriToBase64(uriString: String, context: android.content.Context): String? {
+        return try {
+            val uri = android.net.Uri.parse(uriString)
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val bytes = inputStream?.readBytes()
+            inputStream?.close()
+            if (bytes != null) {
+                android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+            } else null
+        } catch (e: Exception) {
+            null
         }
     }
 

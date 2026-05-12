@@ -106,7 +106,7 @@ fun CropMenuScreen(navController: NavController) {
                         icon = Icons.Default.BugReport,
                         color = Color(0xFFD32F2F),
                         modifier = Modifier.weight(1f),
-                        onClick = { /* Navigate to Pest Control */ }
+                        onClick = { navController.navigate(Screen.StressDetection.route) }
                     )
                 }
                 Row(
@@ -119,7 +119,7 @@ fun CropMenuScreen(navController: NavController) {
                         icon = Icons.Default.Thermostat,
                         color = Color(0xFFF57C00),
                         modifier = Modifier.weight(1f),
-                        onClick = { /* Navigate to Soil Analysis */ }
+                        onClick = { navController.navigate(Screen.FertilizerRecommendation.route) }
                     )
                     CategoryActionCard(
                         title = strings.marketPrice,

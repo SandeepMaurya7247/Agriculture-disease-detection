@@ -173,7 +173,7 @@ fun StressDetectionScreen(navController: NavController, viewModel: AgroViewModel
                         Button(
                             onClick = { 
                                 selectedImageUri?.let { uri ->
-                                    viewModel.detectStress(uri.toString())
+                                    viewModel.detectStress(uri.toString(), context)
                                 }
                             },
                             enabled = selectedImageUri != null && !isLoading,

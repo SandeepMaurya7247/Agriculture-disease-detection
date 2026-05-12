@@ -210,6 +210,24 @@ def recommend_fertilizer():
 # 🔍 STRESS DETECTION (Cloudinary + ML + MongoDB)
 # ----------------------------
 
+def get_expert_advice(disease):
+    advice = ""
+    # Pesticide Advice
+    if disease == "Bacterial Leaf Blight":
+        advice += "🦠 **Pesticide**: Use Copper-based bactericides (Copper Oxychloride) and Streptocycline. Avoid excess Nitrogen.\n\n"
+        advice += "💧 **Irrigation**: Use controlled irrigation (Drip/Furrow). Avoid flooding."
+    elif disease == "Brown Spot":
+        advice += "🍂 **Pesticide**: Use Fungicides like Mancozeb or Carbendazim. Apply Potassium to strengthen leaves.\n\n"
+        advice += "💧 **Irrigation**: Maintain consistent soil moisture. Avoid waterlogging."
+    elif disease == "Leaf Smut":
+        advice += "🌾 **Pesticide**: Use Propiconazole or Mancozeb. Avoid excess Nitrogen.\n\n"
+        advice += "💧 **Irrigation**: Use light irrigation. Keep leaf surface dry."
+    elif disease == "Healthy Leaf":
+        advice += "✅ **No treatment needed**. Plant is healthy. Maintain normal NPK and irrigation."
+    else:
+        advice += "⚠️ **Advice**: Unidentified stress. Use Neem oil or Copper Oxychloride in low dose. Consult an expert."
+    return advice
+
 @app.route('/api/detect/stress', methods=['POST'])
 def detect_stress():
     data = request.json
@@ -239,7 +257,7 @@ def detect_stress():
         img_data = base64.b64decode(image_base64)
         img = Image.open(io.BytesIO(img_data)).resize((224, 224))
         img_array = np.array(img, dtype=np.float32) / 255.0
-        img_array = np.expand_dims(img_array, axis=0) # Add batch dimension
+        img_array = np.expand_dims(img_array, axis=0)
         
         # Run inference
         input_name = session.get_inputs()[0].name
@@ -249,34 +267,28 @@ def detect_stress():
         # Class Mapping (Rice Leaf Diseases)
         classes = ["Bacterial Leaf Blight", "Brown Spot", "Healthy Leaf", "Leaf Smut", "Other Disease"]
         class_idx = np.argmax(output_data[0])
-        confidence = float(output_data[0][class_idx]) * 100
+        confidence = float(output_data[0][class_idx])
         
         disease = classes[class_idx]
+        treatment = get_expert_advice(disease)
         
-        # Action Plans
-        action_plans = {
-            "Bacterial Leaf Blight": "Use copper-based fungicides. Avoid over-fertilization with nitrogen.",
-            "Brown Spot": "Improve soil fertility. Apply balanced NPK fertilizers. Use certified seeds.",
-            "Healthy Leaf": "No stress detected. Continue regular monitoring and watering.",
-            "Leaf Smut": "Usually minor damage. If severe, apply appropriate fungicides and use clean seeds.",
-            "Other Disease": "Unidentified stress detected. Please consult a local agriculture expert."
-        }
-        
-        analysis = f"**Disease**: {disease}\n**Confidence**: {confidence:.1f}%\n**Action Plan**: {action_plans.get(disease, 'N/A')}"
-
         # 3. Save to MongoDB
         analysis_data = {
             "image_url": image_url,
-            "analysis": analysis,
+            "label": disease,
+            "confidence": confidence,
+            "treatment": treatment,
             "timestamp": datetime.utcnow()
         }
         save_stress_analysis(analysis_data)
         
+        # Return fields expected by Mobile App
         return jsonify({
             "success": True,
-            "analysis": analysis,
-            "image_url": image_url,
-            "timestamp": analysis_data["timestamp"].strftime("%Y-%m-%d %H:%M:%S")
+            "label": disease,
+            "confidence": confidence,
+            "treatment": treatment,
+            "image_url": image_url
         })
 
     except Exception as e:
@@ -396,4 +408,6 @@ def chat_query():
 
 if __name__ == '__main__':
     print("AgroTech AI Cloud-Enabled Backend starting...")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Use the port assigned by Render, or 5000 for local testing
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)

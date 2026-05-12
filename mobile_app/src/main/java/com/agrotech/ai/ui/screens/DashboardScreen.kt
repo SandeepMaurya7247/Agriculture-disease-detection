@@ -50,30 +50,34 @@ fun DashboardScreen(navController: NavController, viewModel: AgroViewModel) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp), // Increased height
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Left side spacer to balance the notification icon on the right
-                    Spacer(modifier = Modifier.size(24.dp))
-                    
+                    // Logo and Text together on the left
+                    Image(
+                        painter = painterResource(id = com.agrotech.ai.R.drawable.agro_logo),
+                        contentDescription = "Logo",
+                        modifier = Modifier.size(36.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         strings.appName, 
-                        fontSize = 24.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         color = MaterialTheme.colorScheme.primary
                     ) 
                     
+                    Spacer(modifier = Modifier.weight(1f))
+                    
                     IconButton(
                         onClick = { /* Handle Notifications */ },
-                        modifier = Modifier.size(32.dp) // Smaller button area
+                        modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
                             Icons.Default.Notifications, 
                             contentDescription = "Notifications", 
                             tint = MaterialTheme.colorScheme.primary, 
-                            modifier = Modifier.size(20.dp) // Smaller icon
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
