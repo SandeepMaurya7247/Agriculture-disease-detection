@@ -27,9 +27,11 @@ fun LanguageSelectorScreen(navController: NavController, viewModel: AgroViewMode
     val languages = listOf(
         Language("English", "English", "en", "🇺🇸"),
         Language("Hindi", "हिन्दी", "hi", "🇮🇳"),
+        Language("Marathi", "मराठी", "mr", "🇮🇳"),
+        Language("Punjabi", "ਪੰਜਾਬੀ", "pa", "🇮🇳"),
+        Language("Gujarati", "ગુજરાતી", "gu", "🇮🇳"),
         Language("Bengali", "বাংলা", "bn", "🇮🇳"),
         Language("Telugu", "తెలుగు", "te", "🇮🇳"),
-        Language("Marathi", "मराठी", "mr", "🇮🇳"),
         Language("Tamil", "தமிழ்", "ta", "🇮🇳")
     )
 

@@ -18,11 +18,11 @@ class AgroRepository(private val apiService: ApiService) {
     suspend fun getCropRec(soilData: SoilData): Response<RecommendationResponse> = 
         apiService.getCropRecommendation(soilData)
 
-    suspend fun getFertilizerRec(data: Map<String, Any>): Response<RecommendationResponse> = 
+    suspend fun getFertilizerRec(data: FertilizerRequest): Response<RecommendationResponse> = 
         apiService.getFertilizerRecommendation(data)
 
-    suspend fun detectStress(base64Image: String): Response<StressDetectionResponse> = 
-        apiService.detectStress(mapOf("image" to base64Image))
+    suspend fun detectStress(base64Image: String, lang: String): Response<StressDetectionResponse> = 
+        apiService.detectStress(mapOf("image" to base64Image, "lang" to lang))
 
     suspend fun chat(query: String, lang: String): String {
         val response = apiService.queryChatbot(mapOf("query" to query, "lang" to lang))

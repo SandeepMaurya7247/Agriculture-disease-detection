@@ -22,6 +22,7 @@ import androidx.compose.foundation.border
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -193,57 +194,153 @@ fun StressDetectionScreen(navController: NavController, viewModel: AgroViewModel
             }
 
             if (isLoading) {
-                LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).height(4.dp).clip(CircleShape)
-                )
-                Text("Analyzing plant health...", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 8.dp), color = MaterialTheme.colorScheme.primary)
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        "AI is deep-scanning plant tissue...", 
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
             
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- AI Analysis Result Section ---
+            // --- PREMIUM AI Analysis Result Section ---
             if (stressResult != null) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Diagnosis Result", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(8.dp)
+                        ) {}
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "DIAGNOSIS REPORT",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    // 1. Diagnosis Summary Card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                        shape = RoundedCornerShape(24.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
-                        Column(modifier = Modifier.padding(20.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Surface(
-                                    color = if (stressResult!!.confidence > 0.7) Color(0xFFE8F5E9) else Color(0xFFFFF3E0),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
                                     Text(
-                                        text = if (stressResult!!.confidence > 0.7) "CONFIRMED" else "LOW CONFIDENCE",
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        "Detected Condition",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = if (stressResult!!.confidence > 0.7) Color(0xFF2E7D32) else Color(0xFFE65100),
-                                        fontWeight = FontWeight.Bold
+                                        color = Color.Gray
+                                    )
+                                    Text(
+                                        stressResult!!.label,
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = if (stressResult!!.label.contains("Healthy")) Color(0xFF2E7D32) else Color(0xFFC62828)
                                     )
                                 }
-                                Spacer(Modifier.weight(1f))
-                                Text(
-                                    "Score: ${(stressResult!!.confidence * 100).toInt()}%",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = Color.Gray
-                                )
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (stressResult!!.label.contains("Healthy")) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
+                                ) {
+                                    Icon(
+                                        imageVector = if (stressResult!!.label.contains("Healthy")) Icons.Default.CheckCircle else Icons.Default.Dangerous,
+                                        contentDescription = null,
+                                        tint = if (stressResult!!.label.contains("Healthy")) Color(0xFF2E7D32) else Color(0xFFC62828),
+                                        modifier = Modifier.padding(8.dp).size(24.dp)
+                                    )
+                                }
                             }
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text(stressResult!!.label, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                            Divider(modifier = Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                             
-                            Row(verticalAlignment = Alignment.Top) {
-                                Icon(Icons.Default.Healing, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                                Spacer(Modifier.width(12.dp))
-                                Column {
-                                    Text("Recommended Treatment", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(stressResult!!.treatment, style = MaterialTheme.typography.bodyMedium, color = Color.DarkGray)
+                            Spacer(modifier = Modifier.height(20.dp))
+                            
+                            // Confidence Meter
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Confidence", style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(70.dp))
+                                LinearProgressIndicator(
+                                    progress = stressResult!!.confidence.toFloat(),
+                                    modifier = Modifier.weight(1f).height(6.dp).clip(CircleShape),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    trackColor = Color(0xFFEEEEEE)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text("${(stressResult!!.confidence * 100).toInt()}%", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // 2. Comprehensive Advice Section
+                    Text(
+                        "AI EXPERT RECOMMENDATIONS",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
+                    )
+
+                    stressResult!!.treatment.split("\n\n").forEach { section ->
+                        val lines = section.split("\n")
+                        if (lines.isNotEmpty()) {
+                            val title = lines[0].replace("**", "").replace(":", "")
+                            val content = lines.drop(1).joinToString("\n").trim()
+                            
+                            val sectionIcon = when {
+                                title.contains("Symptoms") || title.contains("Pehchan") -> Icons.Default.Visibility
+                                title.contains("Chemical") || title.contains("Rasayanik") -> Icons.Default.Science
+                                title.contains("Organic") || title.contains("Jaivik") -> Icons.Default.Eco
+                                title.contains("Prevention") || title.contains("Bachav") -> Icons.Default.Shield
+                                else -> Icons.Default.Info
+                            }
+
+                            Card(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(sectionIcon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.width(10.dp))
+                                        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                    }
+                                    if (content.isNotEmpty()) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            content.replace("*", "").replace("•", "→"),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            lineHeight = 20.sp
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -251,42 +348,60 @@ fun StressDetectionScreen(navController: NavController, viewModel: AgroViewModel
 
                     Spacer(modifier = Modifier.height(24.dp))
 
+                    // 3. High-Impact Action Button
                     Button(
                         onClick = {
-                            val reportText = "*Smart Agriculture Analysis*\n\nResult: ${stressResult!!.label}\nTreatment: ${stressResult!!.treatment}"
+                            val reportText = "*AgroTech AI Diagnosis Report*\n\n" +
+                                    "Issue: ${stressResult!!.label}\n" +
+                                    "Confidence: ${(stressResult!!.confidence * 100).toInt()}%\n\n" +
+                                    "Solution:\n${stressResult!!.treatment}"
                             val intent = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
                                 putExtra(Intent.EXTRA_TEXT, reportText)
                             }
-                            context.startActivity(Intent.createChooser(intent, "Share Report"))
+                            context.startActivity(Intent.createChooser(intent, "Share Diagnosis Report"))
                         },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        modifier = Modifier.fillMaxWidth().height(60.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
                     ) {
                         Icon(Icons.Default.Share, null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Export Analysis Report")
+                        Spacer(Modifier.width(12.dp))
+                        Text("Share Diagnosis Report", fontWeight = FontWeight.Bold)
                     }
                 }
             } else if (!isLoading) {
                 // Empty state card
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(24.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Info, null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(Modifier.width(16.dp))
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                            modifier = Modifier.size(80.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.ImageSearch, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp))
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            "Upload a clear leaf photo to detect pests or nutrient deficiencies using AI.",
+                            "Ready for diagnosis",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "Upload a photo to see AI magic",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray
                         )
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

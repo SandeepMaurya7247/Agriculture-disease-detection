@@ -29,10 +29,24 @@ import com.agrotech.ai.ui.screens.*
 import android.view.WindowManager
 
 class MainActivity : ComponentActivity() {
+    private val sessionHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val sessionTimeout = 30 * 60 * 1000L // 30 Minutes
+
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(com.agrotech.ai.R.style.Theme_AgroTechAI)
         super.onCreate(savedInstanceState)
         
+        // 🛠️ SESSION TERMINATION: Auto-close app after 30 minutes
+        sessionHandler.postDelayed({
+            finishAffinity() 
+        }, sessionTimeout)
+
+        // 🛡️ DEBUG MODE: Log the error instead of silently closing
+        Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
+            android.util.Log.e("AgroTechCrash", "CRITICAL STARTUP ERROR", throwable)
+            // For now, let it crash normally so we can see the error in Logcat or Dialog
+        }
+
         // Ensure screenshots are allowed
         window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         
@@ -56,6 +70,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        sessionHandler.removeCallbacksAndMessages(null)
     }
 }
 

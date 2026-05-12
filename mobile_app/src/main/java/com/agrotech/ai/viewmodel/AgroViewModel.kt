@@ -17,8 +17,8 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
     private val _userState = MutableStateFlow<User?>(User("1", "Admin Farmer", "admin@agrotech.com"))
     val userState: StateFlow<User?> = _userState
 
-    private val _cropRec = MutableStateFlow<String?>(null)
-    val cropRec: StateFlow<String?> = _cropRec
+    private val _cropRec = MutableStateFlow<RecommendationResponse?>(null)
+    val cropRec: StateFlow<RecommendationResponse?> = _cropRec
 
     private val _fertilizerRec = MutableStateFlow<RecommendationResponse?>(null)
     val fertilizerRec: StateFlow<RecommendationResponse?> = _fertilizerRec
@@ -128,7 +128,7 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                     _errorState.value = "Failed to fetch weather: ${response.code()}"
                 }
             } catch (e: Exception) {
-                _errorState.value = "Network Error: Check internet connection"
+                _errorState.value = "Weather Sync Error: ${e.message ?: "Connection lost"}"
                 e.printStackTrace()
             } finally {
                 _isRefreshing.value = false
@@ -139,23 +139,32 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
     fun getCropRecommendation(soilData: SoilData) {
         viewModelScope.launch {
             _isLoading.value = true
-            val response = repository.getCropRec(soilData)
-            if (response.isSuccessful) {
-                _cropRec.value = response.body()?.recommendation
+            try {
+                val response = repository.getCropRec(soilData)
+                if (response.isSuccessful) {
+                    _cropRec.value = response.body()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
             _isLoading.value = false
         }
     }
 
-    fun getFertilizerRecommendation(data: Map<String, Any>) {
+    fun getFertilizerRecommendation(data: FertilizerRequest) {
         viewModelScope.launch {
             _isLoading.value = true
+            _errorState.value = null
+            _fertilizerRec.value = null // Clear old result
             try {
                 val response = repository.getFertilizerRec(data)
                 if (response.isSuccessful) {
                     _fertilizerRec.value = response.body()
+                } else {
+                    _errorState.value = "Server Error: ${response.code()}"
                 }
             } catch (e: Exception) {
+                _errorState.value = "Network Error: ${e.message}"
                 e.printStackTrace()
             }
             _isLoading.value = false
@@ -169,7 +178,7 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                 // Convert URI to Base64
                 val base64Image = convertUriToBase64(imageUri, context)
                 if (base64Image != null) {
-                    val response = repository.detectStress(base64Image)
+                    val response = repository.detectStress(base64Image, selectedLanguage.value)
                     if (response.isSuccessful) {
                         _stressResult.value = response.body()
                     } else {
@@ -201,13 +210,24 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
     }
 
     fun sendChatMessage(text: String, lang: String) {
+        println("DEBUG: sendChatMessage called with: $text")
         viewModelScope.launch {
-            val userMsg = ChatMessage(text, true)
-            _chatMessages.value += userMsg
-            
-            val aiResponse = repository.chat(text, lang)
-            val aiMsg = ChatMessage(aiResponse, false)
-            _chatMessages.value += aiMsg
+            try {
+                val userMsg = ChatMessage(text, true)
+                _chatMessages.value = _chatMessages.value + userMsg
+                println("DEBUG: User message added to state")
+                
+                println("DEBUG: Calling repository.chat...")
+                val aiResponse = repository.chat(text, lang)
+                println("DEBUG: AI Response received: $aiResponse")
+                
+                val aiMsg = ChatMessage(aiResponse, false)
+                _chatMessages.value = _chatMessages.value + aiMsg
+            } catch (e: Exception) {
+                println("DEBUG: Chat Error: ${e.message}")
+                e.printStackTrace()
+                _chatMessages.value = _chatMessages.value + ChatMessage("Connection Error: ${e.message}", false)
+            }
         }
     }
 }

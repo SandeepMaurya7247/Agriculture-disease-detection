@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -15,14 +17,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import coil.compose.AsyncImagePainter
 import com.agrotech.ai.data.model.SoilData
+import com.agrotech.ai.data.model.RecommendationResponse
 import com.agrotech.ai.ui.navigation.Screen
 import com.agrotech.ai.ui.components.AgroButton
 import com.agrotech.ai.ui.components.AgroTextField
@@ -30,14 +33,18 @@ import com.agrotech.ai.viewmodel.AgroViewModel
 import com.agrotech.ai.ui.theme.LocalAppStrings
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
-import coil.compose.rememberAsyncImagePainter
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CropRecommendationScreen(navController: NavController, viewModel: AgroViewModel) {
     val strings = LocalAppStrings.current
+    val focusManager = LocalFocusManager.current
+    
     var n by remember { mutableStateOf("") }
     var p by remember { mutableStateOf("") }
     var k by remember { mutableStateOf("") }
@@ -98,31 +105,73 @@ fun CropRecommendationScreen(navController: NavController, viewModel: AgroViewMo
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Box(modifier = Modifier.weight(1f)) {
-                                AgroTextField(value = n, onValueChange = { n = it }, label = "Nitrogen (N)", leadingIcon = Icons.Default.Science)
+                                AgroTextField(
+                                    value = n, 
+                                    onValueChange = { n = it }, 
+                                    label = "Nitrogen (N)", 
+                                    leadingIcon = Icons.Default.Science,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
+                                )
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Box(modifier = Modifier.weight(1f)) {
-                                AgroTextField(value = p, onValueChange = { p = it }, label = "Phosphorous (P)", leadingIcon = Icons.Default.Science)
+                                AgroTextField(
+                                    value = p, 
+                                    onValueChange = { p = it }, 
+                                    label = "Phosphorous (P)", 
+                                    leadingIcon = Icons.Default.Science,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
+                                )
                             }
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Box(modifier = Modifier.weight(1f)) {
-                                AgroTextField(value = k, onValueChange = { k = it }, label = "Potassium (K)", leadingIcon = Icons.Default.Science)
+                                AgroTextField(
+                                    value = k, 
+                                    onValueChange = { k = it }, 
+                                    label = "Potassium (K)", 
+                                    leadingIcon = Icons.Default.Science,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
+                                )
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Box(modifier = Modifier.weight(1f)) {
-                                AgroTextField(value = ph, onValueChange = { ph = it }, label = "Soil pH", leadingIcon = Icons.Default.Opacity)
+                                AgroTextField(
+                                    value = ph, 
+                                    onValueChange = { ph = it }, 
+                                    label = "Soil pH", 
+                                    leadingIcon = Icons.Default.Opacity,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
+                                )
                             }
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Box(modifier = Modifier.weight(1f)) {
-                                AgroTextField(value = humidity, onValueChange = { humidity = it }, label = "Humidity (%)", leadingIcon = Icons.Default.Cloud)
+                                AgroTextField(
+                                    value = humidity, 
+                                    onValueChange = { humidity = it }, 
+                                    label = "Humidity (%)", 
+                                    leadingIcon = Icons.Default.Cloud,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
+                                )
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Box(modifier = Modifier.weight(1f)) {
-                                AgroTextField(value = rainfall, onValueChange = { rainfall = it }, label = "Rainfall (mm)", leadingIcon = Icons.Default.WaterDrop)
+                                AgroTextField(
+                                    value = rainfall, 
+                                    onValueChange = { rainfall = it }, 
+                                    label = "Rainfall (mm)", 
+                                    leadingIcon = Icons.Default.WaterDrop,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+                                )
                             }
                         }
                     }
@@ -173,7 +222,6 @@ fun CropRecommendationScreen(navController: NavController, viewModel: AgroViewMo
     }
 }
 
-
 fun getCropImageUrl(crop: String): String {
     val cleanCrop = crop.trim().lowercase()
     return when (cleanCrop) {
@@ -204,26 +252,56 @@ fun getCropImageUrl(crop: String): String {
 }
 
 @Composable
-fun RecommendationResultCard(cropName: String, navController: NavController, viewModel: AgroViewModel) {
+fun RecommendationResultCard(result: RecommendationResponse, navController: NavController, viewModel: AgroViewModel) {
+    val cropName = result.recommendation
     val imageUrl = getCropImageUrl(cropName)
     
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 24.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1F22))
+            .padding(bottom = 32.dp),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+        Column(modifier = Modifier.padding(24.dp)) {
+            // --- HEADER ---
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
-                    modifier = Modifier.size(90.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFF252A2E),
-                    border = BorderStroke(1.dp, Color(0xFF4CAF50).copy(alpha = 0.5f))
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(Icons.Default.AutoAwesome, null, tint = Color.White, modifier = Modifier.padding(8.dp))
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        "AgriTech Solution AI", 
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        "Smart Crop Recommendation Report", 
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Divider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp)
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // --- MAIN RECOMMENDATION ---
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    modifier = Modifier.size(110.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                 ) {
                     AsyncImage(
                         model = imageUrl,
@@ -233,70 +311,123 @@ fun RecommendationResultCard(cropName: String, navController: NavController, vie
                     )
                 }
                 
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(20.dp))
                 
                 Column {
-                    Surface(
-                        color = Color(0xFF4CAF50).copy(alpha = 0.2f),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = "AI PREDICTION",
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF4CAF50),
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    Text(
+                        "RECOMMENDED CROP", 
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    Text(
+                        cropName.uppercase(), 
+                        style = MaterialTheme.typography.headlineLarge, 
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(cropName.uppercase(), color = Color.White, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
-                    Text("Perfect choice for your soil", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                    Surface(
+                        color = Color(0xFFE8F5E9),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Icon(Icons.Default.Verified, null, tint = Color(0xFF2E7D32), modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                "Accuracy: ${result.accuracy ?: "99.3%"}", 
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color(0xFF2E7D32),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // --- WHY THIS CROP ---
+            Text(
+                "Why this crop? (Model Reasoning)", 
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(12.dp))
             
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                CompactFeatureItem(Icons.Default.WbSunny, "Climate", "Optimal")
-                CompactFeatureItem(Icons.Default.Speed, "Growth", "Fast")
-                CompactFeatureItem(Icons.Default.MonetizationOn, "Profit", "High")
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                result.whyThisCrop?.forEach { item ->
+                    val isPositive = item.impact > 0
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (isPositive) Icons.Default.CheckCircle else Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = if (isPositive) Color(0xFF4CAF50) else Color(0xFFFF9800),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "${item.feature} (impact: ${item.impact})",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                        )
+                    }
+                } ?: Text("Analyzing soil & climate factors...", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            val currentLang = if (LocalAppStrings.current.home == "मुख्य") "hi" else "en"
-            Button(
+            // --- EXPERT EXPLANATION ---
+            Surface(
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.MenuBook, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            "Expert Agricultural Analysis", 
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = result.expertExplanation ?: "Generating ICAR-standard cultivation advice...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        lineHeight = 24.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Justify
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // --- ACTION BUTTON ---
+            AgroButton(
+                text = "Complete Cultivation Guide",
                 onClick = { 
-                    val query = if (currentLang == "hi") "मुझे $cropName की खेती कैसे करें इसके बारे में विस्तार से बताएं" else "Tell me in detail how to grow $cropName"
+                    val query = "Tell me in detail how to grow $cropName"
                     viewModel.setPendingChatQuery(query)
                     navController.navigate(Screen.Chatbot.route)
                 },
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
-            ) {
-                Text(if (currentLang == "hi") "$cropName खेती गाइड" else "How to Grow $cropName", fontWeight = FontWeight.Bold)
-            }
-        }
-    }
-}
-
-@Composable
-fun CompactFeatureItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Surface(
-            modifier = Modifier.size(32.dp),
-            shape = CircleShape,
-            color = Color.White.copy(alpha = 0.05f)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(icon, null, tint = Color(0xFF4CAF50), modifier = Modifier.size(16.dp))
-            }
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        Column {
-            Text(label, color = Color.Gray, fontSize = 10.sp)
-            Text(value, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                containerColor = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

@@ -19,11 +19,11 @@ interface ApiService {
     suspend fun getCropRecommendation(@Body data: SoilData): Response<RecommendationResponse>
 
     @POST("recommend/fertilizer")
-    suspend fun getFertilizerRecommendation(@Body data: Map<String, Any>): Response<RecommendationResponse>
+    suspend fun getFertilizerRecommendation(@Body data: FertilizerRequest): Response<RecommendationResponse>
 
     @POST("detect/stress")
     suspend fun detectStress(@Body request: Map<String, String>): Response<StressDetectionResponse>
 
-    @POST("chat/query")
+    @POST("ai/ask")
     suspend fun queryChatbot(@Body request: Map<String, String>): Response<Map<String, String>>
 }

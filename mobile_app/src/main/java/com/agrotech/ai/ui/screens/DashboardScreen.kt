@@ -27,18 +27,68 @@ import com.agrotech.ai.ui.navigation.Screen
 import com.agrotech.ai.viewmodel.AgroViewModel
 import com.agrotech.ai.ui.theme.LocalAppStrings
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+
+@SuppressLint("MissingPermission")
+private fun fetchCurrentLocation(
+    context: Context,
+    fusedLocationClient: com.google.android.gms.location.FusedLocationProviderClient,
+    onLocationFound: (Double, Double) -> Unit
+) {
+    fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+        .addOnSuccessListener { location ->
+            if (location != null) {
+                onLocationFound(location.latitude, location.longitude)
+            } else {
+                // Fallback to Delhi if location is null
+                onLocationFound(28.6139, 77.2090)
+            }
+        }
+        .addOnFailureListener {
+            onLocationFound(28.6139, 77.2090)
+        }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(navController: NavController, viewModel: AgroViewModel) {
     val strings = LocalAppStrings.current
+    val context = LocalContext.current
     val weather by viewModel.weatherState.collectAsState()
     val user by viewModel.userState.collectAsState()
     val error by viewModel.errorState.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
+            permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
+        ) {
+            // Permission granted, fetch location
+            fetchCurrentLocation(context, fusedLocationClient) { lat, lon ->
+                viewModel.fetchWeather(lat, lon)
+            }
+        }
+    }
+
     // Fetch weather data on startup
     LaunchedEffect(Unit) {
-        viewModel.fetchWeather(28.6139, 77.2090) // Default to New Delhi
+        locationPermissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
     }
 
     Scaffold(
@@ -127,7 +177,11 @@ fun DashboardScreen(navController: NavController, viewModel: AgroViewModel) {
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             IconButton(
-                                onClick = { viewModel.fetchWeather(28.6139, 77.2090) },
+                                onClick = { 
+                                    fetchCurrentLocation(context, fusedLocationClient) { lat, lon ->
+                                        viewModel.fetchWeather(lat, lon)
+                                    }
+                                },
                                 modifier = Modifier.size(24.dp)
                             ) {
                                 if (isRefreshing) {

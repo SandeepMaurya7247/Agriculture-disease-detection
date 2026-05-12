@@ -37,9 +37,25 @@ data class SoilData(
 )
 
 data class RecommendationResponse(
+    val success: Boolean? = true,
     val recommendation: String,
     val confidence: Float? = null,
-    val details: String? = null
+    val accuracy: String? = null,
+    @SerializedName("why_this_crop") val whyThisCrop: List<LimeItem>? = null,
+    @SerializedName("expert_explanation") val expertExplanation: String? = null,
+    val details: String? = null,
+    val deficiency: Map<String, Double>? = null,
+    val schedule: List<ScheduleItem>? = null
+)
+
+data class LimeItem(
+    val feature: String,
+    val impact: Double
+)
+
+data class ScheduleItem(
+    @SerializedName("Stage") val stage: String,
+    @SerializedName("Quantity (kg/ha)") val quantity: Double
 )
 
 data class StressDetectionResponse(
@@ -52,4 +68,15 @@ data class ChatMessage(
     val text: String,
     val isUser: Boolean,
     val timestamp: Long = System.currentTimeMillis()
+)
+
+data class FertilizerRequest(
+    val n: Int,
+    val p: Int,
+    val k: Int,
+    val moisture: Double,
+    val temp: Double,
+    val humidity: Double,
+    @SerializedName("soil_type") val soilType: String,
+    @SerializedName("crop_type") val cropType: String
 )

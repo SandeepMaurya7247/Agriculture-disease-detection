@@ -3,6 +3,7 @@ package com.agrotech.ai.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -32,8 +33,12 @@ import androidx.navigation.NavController
 import com.agrotech.ai.ui.components.*
 import com.agrotech.ai.ui.navigation.Screen
 import com.agrotech.ai.viewmodel.AgroViewModel
+import com.agrotech.ai.data.model.*
 import com.agrotech.ai.ui.theme.LocalAppStrings
 import kotlinx.coroutines.delay
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.ImeAction
 
 @Composable
 fun SplashScreen(navController: NavController) {
@@ -44,13 +49,25 @@ fun SplashScreen(navController: NavController) {
             popUpTo(Screen.Splash.route) { inclusive = true }
         }
     }
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary)) {
-        Image(
-            painter = painterResource(id = com.agrotech.ai.R.drawable.ttttt),
-            contentDescription = null,
+    Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
+        Column(
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Image(
+                painter = painterResource(id = com.agrotech.ai.R.drawable.ttttt),
+                contentDescription = "AgroTech Logo",
+                modifier = Modifier.size(200.dp).clip(RoundedCornerShape(16.dp)),
+                contentScale = ContentScale.Fit
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary,
+                strokeWidth = 3.dp,
+                modifier = Modifier.size(32.dp)
+            )
+        }
     }
 }
 
@@ -64,90 +81,353 @@ fun FertilizerRecommendationScreen(navController: NavController, viewModel: Agro
     var moisture by remember { mutableStateOf("") }
     var temperature by remember { mutableStateOf("") }
     var humidity by remember { mutableStateOf("") }
-    var soilType by remember { mutableStateOf("") }
-    var cropType by remember { mutableStateOf("") }
+    
+    // Dropdown States
+    var soilType by remember { mutableStateOf("Loamy") }
+    var cropType by remember { mutableStateOf("Wheat") }
+    var soilExpanded by remember { mutableStateOf(false) }
+    var cropExpanded by remember { mutableStateOf(false) }
+
+    val soilTypes = listOf("Sandy", "Loamy", "Black", "Red", "Clay")
+    val cropTypes = listOf("Wheat", "Rice", "Maize", "Cotton", "Sugarcane", "Pulses", "Tobacco", "Oil seeds", "Barley", "Millets")
 
     val fertResult by viewModel.fertilizerRec.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.errorState.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(strings.fertRec) },
+                title = { Text(strings.fertRec, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, null)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         }
     ) { padding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .padding(padding)
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState())
         ) {
-            Text(strings.enterDetails, style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(16.dp))
+            item {
+                Text(
+                    text = strings.enterDetails,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Provide soil test values for precise results",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
 
-            Row(modifier = Modifier.fillMaxWidth()) {
-                AgroTextField(value = nitrogen, onValueChange = { nitrogen = it }, label = strings.nitrogen, modifier = Modifier.weight(1f))
-                Spacer(modifier = Modifier.width(8.dp))
-                AgroTextField(value = phosphorous, onValueChange = { phosphorous = it }, label = strings.phosphorous, modifier = Modifier.weight(1f))
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(modifier = Modifier.fillMaxWidth()) {
-                AgroTextField(value = potassium, onValueChange = { potassium = it }, label = strings.potassium, modifier = Modifier.weight(1f))
-                Spacer(modifier = Modifier.width(8.dp))
-                AgroTextField(value = moisture, onValueChange = { moisture = it }, label = strings.moisture, modifier = Modifier.weight(1f))
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(modifier = Modifier.fillMaxWidth()) {
-                AgroTextField(value = temperature, onValueChange = { temperature = it }, label = strings.temperature, modifier = Modifier.weight(1f))
-                Spacer(modifier = Modifier.width(8.dp))
-                AgroTextField(value = humidity, onValueChange = { humidity = it }, label = strings.humidity, modifier = Modifier.weight(1f))
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            AgroTextField(value = soilType, onValueChange = { soilType = it }, label = strings.soilType)
-            Spacer(modifier = Modifier.height(8.dp))
-            AgroTextField(value = cropType, onValueChange = { cropType = it }, label = strings.cropType)
-
-            Spacer(modifier = Modifier.height(24.dp))
-            AgroButton(
-                text = if (isLoading) "Analyzing..." else strings.predictFertilizer,
-                onClick = {
-                    viewModel.getFertilizerRecommendation(
-                        mapOf(
-                            "n" to (nitrogen.toIntOrNull() ?: 0),
-                            "p" to (phosphorous.toIntOrNull() ?: 0),
-                            "k" to (potassium.toIntOrNull() ?: 0),
-                            "moisture" to (moisture.toDoubleOrNull() ?: 0.0),
-                            "temp" to (temperature.toDoubleOrNull() ?: 0.0),
-                            "humidity" to (humidity.toDoubleOrNull() ?: 0.0),
-                            "soil_type" to soilType,
-                            "crop" to cropType
-                        )
+            // N, P, K Row
+            item {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    AgroTextField(
+                        value = nitrogen, 
+                        onValueChange = { if(it.length <= 3) nitrogen = it }, 
+                        label = "N (Nitrogen)", 
+                        modifier = Modifier.weight(1f),
+                        leadingIcon = Icons.Default.Science,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    AgroTextField(
+                        value = phosphorous, 
+                        onValueChange = { if(it.length <= 3) phosphorous = it }, 
+                        label = "P (Phos.)", 
+                        modifier = Modifier.weight(1f),
+                        leadingIcon = Icons.Default.Science,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
                     )
                 }
-            )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
-            if (fertResult != null) {
-                Spacer(modifier = Modifier.height(24.dp))
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    modifier = Modifier.fillMaxWidth()
+            // K, Moisture Row
+            item {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    AgroTextField(
+                        value = potassium, 
+                        onValueChange = { if(it.length <= 3) potassium = it }, 
+                        label = "K (Potass.)", 
+                        modifier = Modifier.weight(1f),
+                        leadingIcon = Icons.Default.Science,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    AgroTextField(
+                        value = moisture, 
+                        onValueChange = { if(it.length <= 3) moisture = it }, 
+                        label = "Moisture", 
+                        modifier = Modifier.weight(1f),
+                        leadingIcon = Icons.Default.WaterDrop,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next)
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // Temp, Humidity Row
+            item {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    AgroTextField(
+                        value = temperature, 
+                        onValueChange = { temperature = it }, 
+                        label = "Temp (°C)", 
+                        modifier = Modifier.weight(1f),
+                        leadingIcon = Icons.Default.Thermostat,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    AgroTextField(
+                        value = humidity, 
+                        onValueChange = { humidity = it }, 
+                        label = "Humidity", 
+                        modifier = Modifier.weight(1f),
+                        leadingIcon = Icons.Default.Cloud,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done)
+                    )
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+
+            // Dropdowns
+            item {
+                Text("Environmental Context", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                ExposedDropdownMenuBox(
+                    expanded = soilExpanded,
+                    onExpandedChange = { soilExpanded = !soilExpanded }
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Recommended Fertilizer:", style = MaterialTheme.typography.labelSmall)
-                        Text(fertResult!!.recommendation, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                        if (fertResult!!.details != null) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(fertResult!!.details!!, style = MaterialTheme.typography.bodyMedium)
+                    OutlinedTextField(
+                        value = soilType,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Soil Type") },
+                        leadingIcon = { Icon(Icons.Default.Landscape, null) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = soilExpanded) },
+                        modifier = Modifier.fillMaxWidth().menuAnchor(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    ExposedDropdownMenu(expanded = soilExpanded, onDismissRequest = { soilExpanded = false }) {
+                        soilTypes.forEach { selectionOption ->
+                            DropdownMenuItem(
+                                text = { Text(selectionOption) },
+                                onClick = { soilType = selectionOption; soilExpanded = false }
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+
+                ExposedDropdownMenuBox(
+                    expanded = cropExpanded,
+                    onExpandedChange = { cropExpanded = !cropExpanded }
+                ) {
+                    OutlinedTextField(
+                        value = cropType,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Crop Type") },
+                        leadingIcon = { Icon(Icons.Default.Agriculture, null) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = cropExpanded) },
+                        modifier = Modifier.fillMaxWidth().menuAnchor(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    ExposedDropdownMenu(expanded = cropExpanded, onDismissRequest = { cropExpanded = false }) {
+                        cropTypes.forEach { selectionOption ->
+                            DropdownMenuItem(
+                                text = { Text(selectionOption) },
+                                onClick = { cropType = selectionOption; cropExpanded = false }
+                            )
                         }
                     }
                 }
             }
+
+            item {
+                error?.let {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+                val context = androidx.compose.ui.platform.LocalContext.current
+                Spacer(modifier = Modifier.height(16.dp))
+                AgroButton(
+                    text = if (isLoading) "Analyzing Soil Data..." else strings.predictFertilizer,
+                    onClick = {
+                        // DIAGNOSTIC TOAST
+                        android.widget.Toast.makeText(context, "Requesting AI Recommendation...", android.widget.Toast.LENGTH_SHORT).show()
+                        
+                        viewModel.getFertilizerRecommendation(
+                            FertilizerRequest(
+                                n = (nitrogen.toIntOrNull() ?: 0),
+                                p = (phosphorous.toIntOrNull() ?: 0),
+                                k = (potassium.toIntOrNull() ?: 0),
+                                moisture = (moisture.toDoubleOrNull() ?: 0.0),
+                                temp = (temperature.toDoubleOrNull() ?: 0.0),
+                                humidity = (humidity.toDoubleOrNull() ?: 0.0),
+                                soilType = soilType,
+                                cropType = cropType
+                            )
+                        )
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            if (fertResult != null) {
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    // --- PREMIUM FERTILIZER DASHBOARD ---
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
+                        shape = RoundedCornerShape(28.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3E5F5)), // Premium Lavender
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            // Header
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = Color(0xFF4CAF50),
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.padding(6.dp))
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    "AI Recommended Solution", 
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF4A148C)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Fertilizer Name
+                            Text(
+                                text = fertResult!!.recommendation,
+                                style = MaterialTheme.typography.headlineLarge,
+                                fontWeight = FontWeight.Black,
+                                color = Color(0xFF4A148C)
+                            )
+                            Text(
+                                text = fertResult!!.details ?: "Optimal for your soil & crop",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 1. Nutrient Deficiency Section
+                            Text(
+                                "Nutrient Deficiency (kg/ha)",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                val n = fertResult!!.deficiency?.get("N") ?: 0.0
+                                val p = fertResult!!.deficiency?.get("P") ?: 0.0
+                                val k = fertResult!!.deficiency?.get("K") ?: 0.0
+                                
+                                NutrientBadge("N", n, Color(0xFFE91E63), Modifier.weight(1f))
+                                NutrientBadge("P", p, Color(0xFFFF9800), Modifier.weight(1f))
+                                NutrientBadge("K", k, Color(0xFF2196F3), Modifier.weight(1f))
+                            }
+
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Divider(color = Color.Black.copy(alpha = 0.05f))
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // 2. Application Schedule Timeline
+                            Text(
+                                "Application Schedule",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF4A148C)
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
+                            fertResult!!.schedule?.forEachIndexed { index, item ->
+                                ScheduleRow(
+                                    stage = item.stage,
+                                    qty = item.quantity,
+                                    isLast = index == (fertResult!!.schedule?.size ?: 0) - 1
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun NutrientBadge(label: String, value: Double, color: Color, modifier: Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = color.copy(alpha = 0.1f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.2f))
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(label, fontWeight = FontWeight.Bold, color = color, fontSize = 12.sp)
+            Text(value.toInt().toString(), fontWeight = FontWeight.Black, fontSize = 16.sp, color = Color.DarkGray)
+        }
+    }
+}
+
+@Composable
+fun ScheduleRow(stage: String, qty: Double, isLast: Boolean) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Surface(
+                shape = CircleShape,
+                color = Color(0xFF4A148C),
+                modifier = Modifier.size(10.dp)
+            ) {}
+            if (!isLast) {
+                Box(
+                    modifier = Modifier
+                        .width(2.dp)
+                        .height(40.dp)
+                        .background(Color(0xFF4A148C).copy(alpha = 0.2f))
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column {
+            Text(stage, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+            Text("$qty kg/ha", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

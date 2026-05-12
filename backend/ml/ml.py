@@ -7,31 +7,12 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import classification_report
 
-try:
-    from xgboost import XGBClassifier
-except ImportError:
-    print("Warning: xgboost not found. Using mock classifier.")
-    from sklearn.base import BaseEstimator
-    class XGBClassifier(BaseEstimator):
-        def __init__(self, **kwargs): pass
-        def fit(self, X, y):
-            self.classes_ = np.unique(y)
-            return self
-        def predict(self, X): return np.zeros(len(X), dtype=int)
-        def score(self, X, y): return 0.95
-        def predict_proba(self, X): return np.array([[0.1, 0.9]] * len(X))
-        def __sklearn_tags__(self):
-            from sklearn.utils._tags import _DEFAULT_TAGS
-            return _DEFAULT_TAGS
+from sklearn.ensemble import RandomForestClassifier
 import json
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
-
-# Database connection removed (transitioned to MongoDB Atlas)
-
-
 
 # Crop nutrient requirements (kg/ha)
 CROP_DATA = {
@@ -52,8 +33,6 @@ FERTILIZER_PRICES = {
     "10-26-26": 18
 }
 
-
-
 class FertilizerModel:
     def __init__(self):
         self.pipeline = None
@@ -67,11 +46,11 @@ class FertilizerModel:
 
         self.pipeline = Pipeline([
             ("preprocessor", preprocessor),
-            ("classifier", XGBClassifier(
-                n_estimators=100,
-                learning_rate=0.1,
+            ("classifier", RandomForestClassifier(
+                n_estimators=200,
+                max_depth=12,
                 random_state=42,
-                eval_metric="mlogloss"
+                criterion='entropy'
             ))
         ])
 
@@ -171,12 +150,60 @@ class AgronomyEngine:
             "Application Schedule": schedule
         }
     
+import pickle
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(BASE_DIR, "..", "..", "data", "Soil_Nutrient.csv")
+MODEL_FILE = os.path.join(BASE_DIR, "..", "..", "saved_models", "fertilizer_model.pkl")
+
+# Lazy loaders
+_explainer = None
+_embeddings = None
+_vector_db = None
+_llm = None
+
+def get_explainer():
+    global _explainer
+    if _explainer is None:
+        _explainer = LimeTabularExplainer(
+            training_data=model.X_train_transformed,
+            feature_names=model.feature_names_transformed,
+            class_names=model.label_encoder.classes_,
+            mode="classification"
+        )
+    return _explainer
+
+def get_rag_components():
+    global _embeddings, _vector_db, _llm
+    if _embeddings is None:
+        try:
+            _embeddings = HuggingFaceEmbeddings(model_name="saved_models/all-MiniLM-L6-v2")
+            _vector_db = FAISS.load_local("saved_models/faiss_index", _embeddings, allow_dangerous_deserialization=True)
+            _llm = ChatGroq(model="llama-3.1-8b-instant")
+        except Exception as e:
+            print(f"Lazy RAG failed: {e}")
+    return _vector_db, _llm
+
+# Load or Train Model
 df = pd.read_csv(DATA_PATH)
 model = FertilizerModel()
-model.train(df)
-    
+
+loaded = False
+if os.path.exists(MODEL_FILE):
+    print("Loading pre-trained model...")
+    try:
+        with open(MODEL_FILE, 'rb') as f:
+            model = pickle.load(f)
+            loaded = True
+    except (EOFError, pickle.UnpicklingError):
+        print("Corrupted model file detected, re-training...")
+
+if not loaded:
+    print("Training new model...")
+    model.train(df)
+    os.makedirs(os.path.dirname(MODEL_FILE), exist_ok=True)
+    with open(MODEL_FILE, 'wb') as f:
+        pickle.dump(model, f)
 
 def generate_report(crop, n, p, k, moisture, temp , humidity , soil_type):
     input_data = {
@@ -191,81 +218,20 @@ def generate_report(crop, n, p, k, moisture, temp , humidity , soil_type):
     }
 
     fertilizer = model.predict_fertilizer(input_data)
-
-    return AgronomyEngine.generate_report(
-        crop=crop,
-        fertilizer=fertilizer,
-        soil_n=n,
-        soil_p=p,
-        soil_k=k
-    )
-
-
-    
-
-# xai with lime deep diving okay
-# LIME EXPLAINABILITY
-from lime.lime_tabular import LimeTabularExplainer
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
-from langchain_groq import ChatGroq
-
-
-
-explainer = LimeTabularExplainer(
-    training_data=model.X_train_transformed,
-    feature_names=model.feature_names_transformed,
-    class_names=model.label_encoder.classes_,
-    mode="classification"
-)
-
-def lime_predict_fn(X):
-    return model.pipeline.named_steps["classifier"].predict_proba(X)
+    return AgronomyEngine.generate_report(crop, fertilizer, n, p, k)
 
 def explain_with_lime(input_data):
-    fertilizer = model.predict_fertilizer(input_data)
-
+    explainer = get_explainer()
     X = pd.DataFrame([input_data])
     X_trans = model.pipeline.named_steps["preprocessor"].transform(X)
-
-    exp = explainer.explain_instance(
-        X_trans[0],
-        lime_predict_fn,
-        num_features=8
-    )
-
-    lime_output = [
-        {"feature": f, "impact": round(w, 3)}
-        for f, w in exp.as_list()
-    ]
-
-    return fertilizer, lime_output
-
-
-
-# RAG SETUP
-# =========================
-try:
-    embeddings = HuggingFaceEmbeddings(
-        model_name="saved_models/all-MiniLM-L6-v2"
-    )
-
-    vector_db = FAISS.load_local(
-        "saved_models/faiss_index",
-        embeddings,
-        allow_dangerous_deserialization=True
-    )
-
-    retriever = vector_db.as_retriever(search_kwargs={"k": 3})
-    llm = ChatGroq(model="llama-3.1-8b-instant")
-except Exception as e:
-    print(f"Warning: RAG setup failed: {e}")
-    retriever = None
-    llm = None
+    exp = explainer.explain_instance(X_trans[0], lime_predict_fn, num_features=8)
+    return model.predict_fertilizer(input_data), [{"feature": f, "impact": round(w, 3)} for f, w in exp.as_list()]
 
 def rag_explanation(fertilizer, lime_output):
-    if not retriever or not llm:
-        return "RAG Explanation unavailable (Setup failed)."
+    vector_db, llm = get_rag_components()
+    if not vector_db or not llm: return "RAG Explanation unavailable."
+    
+    retriever = vector_db.as_retriever(search_kwargs={"k": 3})
 
     # lime_output MUST be list[dict]
     lime_text = "\n".join(
