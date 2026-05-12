@@ -42,6 +42,7 @@ data class RecommendationResponse(
     val confidence: Float? = null,
     val accuracy: String? = null,
     @SerializedName("why_this_crop") val whyThisCrop: List<LimeItem>? = null,
+    @SerializedName("why_this_fertilizer") val whyThisFertilizer: List<LimeItem>? = null,
     @SerializedName("expert_explanation") val expertExplanation: String? = null,
     val details: String? = null,
     val deficiency: Map<String, Double>? = null,

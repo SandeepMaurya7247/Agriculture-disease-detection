@@ -156,13 +156,20 @@ def final_crop_explaination(crop, lime_output):
     lime_text = "\n".join([f"{x['feature']} impact {x['impact']}" for x in lime_output])
     
     prompt = f"""
-    You are an expert agriculture scientist.
-    Based on ICAR and Government standards, explain why {crop} is recommended for a farmer.
+    You are a Senior Agriculture Scientist with expert knowledge of ICAR standards.
+    Provide a HIGHLY DETAILED, PROFESSIONAL, and ACTIONABLE agricultural report for the recommended crop: {crop}.
     
-    Model reasoning (LIME):
+    Data-Driven Context (Model Reasoning):
     {lime_text}
     
-    Provide a detailed, professional, and encouraging explanation.
+    Your report MUST include these specific sections:
+    1. 📋 **Introduction**: Why this crop is best for these specific soil/climate conditions.
+    2. 🔍 **Identification & Symptoms**: What to look for during early growth.
+    3. 💊 **Chemical Treatment**: Specific fertilizer/pesticide dosages (if needed).
+    4. 🍃 **Organic Treatment**: Natural alternatives and bio-stimulants.
+    5. 🛡️ **Expert Prevention (Bachav)**: Long-term strategies for high yield.
+    
+    Write in a professional, encouraging tone suitable for a specialized farming dashboard.
     """
     try:
         return llm.invoke(prompt).content

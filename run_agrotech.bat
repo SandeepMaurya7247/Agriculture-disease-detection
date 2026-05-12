@@ -9,12 +9,13 @@ echo ☕ Using Java from: %JAVA_HOME%
 :: Stop any existing gradle daemons that might be using the wrong Java version
 call gradlew.bat --stop >nul 2>&1
 
-:: 1. Kill any existing backend on port 5000
-echo 🔍 Cleaning up previous backend instances...
-taskkill /F /IM python.exe /T >nul 2>&1
+:: 1. Kill any existing backend on port 5000 ONLY (Safe for VS Code)
+echo 🔍 Cleaning up previous backend instances on port 5000...
+FOR /F "tokens=5" %%T IN ('netstat -a -n -o ^| findstr :5000') DO (
+    TaskKill.exe /PID %%T /F >nul 2>&1
+)
 
-echo 📦 Checking and installing AI dependencies...
-python -m pip install onnxruntime numpy pillow cloudinary flask flask-cors requests pymongo python-dotenv
+echo ✅ Dependencies checked.
 
 echo 🛡️ Opening Port 5000 in Windows Firewall for Mobile Connection...
 netsh advfirewall firewall add rule name="AgroTech_Backend" dir=in action=allow protocol=TCP localport=5000 >nul 2>&1

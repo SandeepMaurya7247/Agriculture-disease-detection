@@ -378,9 +378,10 @@ fun RecommendationResultCard(result: RecommendationResponse, navController: NavC
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "${item.feature} (impact: ${item.impact})",
+                            text = if (isPositive) "✅ ${item.feature} (impact: ${item.impact})" else "⚠️ ${item.feature} (impact: ${item.impact})",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                            fontWeight = FontWeight.Medium,
+                            color = if (isPositive) Color(0xFF2E7D32) else Color(0xFFD32F2F)
                         )
                     }
                 } ?: Text("Analyzing soil & climate factors...", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
