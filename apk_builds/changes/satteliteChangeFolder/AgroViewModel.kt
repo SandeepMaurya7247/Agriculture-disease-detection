@@ -7,7 +7,6 @@ import com.agrotech.ai.data.repository.AgroRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
@@ -22,16 +21,17 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
     val cropRec: StateFlow<RecommendationResponse?> = _cropRec
 
     private val _fertilizerRec = MutableStateFlow<RecommendationResponse?>(null)
-    val fertilizerRec = _fertilizerRec.asStateFlow()
-
-    private val _iotState = MutableStateFlow<IotData?>(null)
-    val iotState = _iotState.asStateFlow()
-
-    private val _iotHistory = MutableStateFlow<List<IotData>>(emptyList())
-    val iotHistory = _iotHistory.asStateFlow()
+    val fertilizerRec: StateFlow<RecommendationResponse?> = _fertilizerRec
 
     private val _stressResult = MutableStateFlow<StressDetectionResponse?>(null)
     val stressResult: StateFlow<StressDetectionResponse?> = _stressResult
+
+    // 🛰️ Satellite crop health analysis state
+    private val _cropAnalysisResult = MutableStateFlow<CropAnalysisResponse?>(null)
+    val cropAnalysisResult: StateFlow<CropAnalysisResponse?> = _cropAnalysisResult
+
+    private val _isSatelliteLoading = MutableStateFlow(false)
+    val isSatelliteLoading: StateFlow<Boolean> = _isSatelliteLoading.asStateFlow()
 
     private val _chatMessages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val chatMessages: StateFlow<List<ChatMessage>> = _chatMessages
@@ -51,10 +51,6 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
 
     private val _pendingChatQuery = MutableStateFlow<String?>(null)
     val pendingChatQuery: StateFlow<String?> = _pendingChatQuery.asStateFlow()
-
-    init {
-        startIotPolling()
-    }
 
     fun setPendingChatQuery(query: String?) {
         _pendingChatQuery.value = query
@@ -151,8 +147,7 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val dataWithLang = soilData.copy(lang = selectedLanguage.value)
-                val response = repository.getCropRec(dataWithLang)
+                val response = repository.getCropRec(soilData)
                 if (response.isSuccessful) {
                     _cropRec.value = response.body()
                 }
@@ -169,8 +164,7 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
             _errorState.value = null
             _fertilizerRec.value = null // Clear old result
             try {
-                val dataWithLang = data.copy(lang = selectedLanguage.value)
-                val response = repository.getFertilizerRec(dataWithLang)
+                val response = repository.getFertilizerRec(data)
                 if (response.isSuccessful) {
                     _fertilizerRec.value = response.body()
                 } else {
@@ -222,6 +216,48 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // 🛰️  Satellite NDVI Crop Health Analysis
+    // ─────────────────────────────────────────────────────────────────────────
+    /**
+     * Sends lat/lon/radius to the backend which fetches real Sentinel-2 satellite
+     * NDVI data and returns the crop health prediction.
+     *
+     * @param lat      Latitude of the farm centre (decimal degrees)
+     * @param lon      Longitude of the farm centre (decimal degrees)
+     * @param radiusM  Analysis radius in metres (e.g. 500 for a ~0.8 km² field)
+     */
+    fun analyzeCrop(lat: Double, lon: Double, radiusM: Double) {
+        viewModelScope.launch {
+            _isSatelliteLoading.value = true
+            _cropAnalysisResult.value = null
+            _errorState.value = null
+            try {
+                val request = CropAnalysisRequest(
+                    latitude  = lat,
+                    longitude = lon,
+                    radius    = radiusM
+                )
+                val response = repository.analyzeCrop(request)
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body?.success == true) {
+                        _cropAnalysisResult.value = body
+                    } else {
+                        _errorState.value = body?.error ?: "Satellite analysis returned no data."
+                    }
+                } else {
+                    _errorState.value = "Server error: ${response.code()} — ${response.message()}"
+                }
+            } catch (e: Exception) {
+                _errorState.value = "Network error: ${e.message ?: "Could not connect to server"}"
+                e.printStackTrace()
+            } finally {
+                _isSatelliteLoading.value = false
+            }
+        }
+    }
+
     fun sendChatMessage(text: String, lang: String) {
         println("DEBUG: sendChatMessage called with: $text")
         viewModelScope.launch {
@@ -240,43 +276,6 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                 println("DEBUG: Chat Error: ${e.message}")
                 e.printStackTrace()
                 _chatMessages.value = _chatMessages.value + ChatMessage("Connection Error: ${e.message}", false)
-            }
-        }
-    }
-
-    fun simulateSensorData(soil: Double, temp: Double) {
-        viewModelScope.launch {
-            try {
-                repository.simulateIot(soil, temp)
-            } catch (e: Exception) {
-                // Ignore simulation errors
-            }
-        }
-    }
-
-    private fun startIotPolling() {
-        viewModelScope.launch {
-            while (true) {
-                try {
-                    val response = repository.getLatestIot()
-                    if (response.isSuccessful) {
-                        val newData = response.body()?.data
-                        _iotState.value = newData
-                        
-                        if (newData != null) {
-                            val currentList = _iotHistory.value.toMutableList()
-                            // Only add if it's a new timestamp to avoid duplicates
-                            if (currentList.isEmpty() || currentList.last().timestamp != newData.timestamp) {
-                                currentList.add(newData)
-                                if (currentList.size > 10) currentList.removeAt(0)
-                                _iotHistory.value = currentList
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    // Ignore errors during polling
-                }
-                delay(2000)
             }
         }
     }

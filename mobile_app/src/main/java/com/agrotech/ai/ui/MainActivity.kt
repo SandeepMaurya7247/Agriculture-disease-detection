@@ -125,6 +125,7 @@ fun AgroNavHost(viewModel: AgroViewModel) {
             composable(Screen.Chatbot.route) { ChatbotScreen(navController, viewModel) }
             composable(Screen.Profile.route) { ProfileScreen(navController, viewModel) }
             composable(Screen.CropDetails.route) { CropDetailsScreen(navController, viewModel) }
+            composable(Screen.SmartIrrigation.route) { SmartIrrigationScreen(navController, viewModel) }
         }
     }
 }

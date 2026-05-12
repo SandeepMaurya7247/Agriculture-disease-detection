@@ -113,14 +113,14 @@ def predict_crop(input_data):
     X_df = pd.DataFrame([input_data])
     return model.predict(X_df)[0]
 
-def generate_crop_report(n, p, k, temp, humidity, ph, rainfall):
+def generate_crop_report(n, p, k, temp, humidity, ph, rainfall, lang='en'):
     input_data = {"N": n, "P": p, "K": k, "temperature": temp, "humidity": humidity, "ph": ph, "rainfall": rainfall}
     
     # 1. Get Prediction and LIME Explanation
     crop, lime_output = predict_crop_with_lime(input_data)
     
     # 2. Get AI Expert Explanation
-    expert_explanation = final_crop_explaination(crop, lime_output)
+    expert_explanation = final_crop_explaination(crop, lime_output, lang=lang)
     
     # 3. Model Accuracy (Premium precision)
     accuracy = 0.993 
@@ -145,7 +145,7 @@ def predict_crop_with_lime(input_data):
     exp = explainer.explain_instance(X_input[feature_names].to_numpy()[0], proba_fn, num_features=7, num_samples=250)
     return crop, [{"feature": f, "impact": round(w, 3)} for f, w in exp.as_list()]
 
-def final_crop_explaination(crop, lime_output):
+def final_crop_explaination(crop, lime_output, lang='en'):
     global llm
     if llm is None:
         get_rag_components()
@@ -158,6 +158,9 @@ def final_crop_explaination(crop, lime_output):
     prompt = f"""
     You are a Senior Agriculture Scientist with expert knowledge of ICAR standards.
     Provide a HIGHLY DETAILED, PROFESSIONAL, and ACTIONABLE agricultural report for the recommended crop: {crop}.
+    
+    IMPORTANT: You MUST write the entire report in the following language: {lang}. 
+    (If lang is 'hi', write in Hindi; if 'pa', write in Punjabi; otherwise English).
     
     Data-Driven Context (Model Reasoning):
     {lime_text}

@@ -27,9 +27,7 @@ interface ApiService {
     @POST("ai/ask")
     suspend fun queryChatbot(@Body request: Map<String, String>): Response<Map<String, String>>
 
-    @GET("iot/latest")
-    suspend fun getLatestIot(): Response<IotResponse>
-
-    @GET("iot")
-    suspend fun simulateIot(@Query("soil") soil: Double, @Query("temp") temp: Double): Response<Map<String, Any>>
+    // 🛰️ Satellite NDVI crop health analysis
+    @POST("analyze-crop")
+    suspend fun analyzeCrop(@Body request: CropAnalysisRequest): Response<CropAnalysisResponse>
 }

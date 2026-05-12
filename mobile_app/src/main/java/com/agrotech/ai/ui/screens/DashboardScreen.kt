@@ -200,18 +200,19 @@ fun DashboardScreen(navController: NavController, viewModel: AgroViewModel) {
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
                         }
+                        val iotState by viewModel.iotState.collectAsState()
                         Row(modifier = Modifier.fillMaxWidth()) {
                             MetricItem(
                                 title = strings.soilMoisture,
-                                value = "42%",
+                                value = "${iotState?.soil?.toInt() ?: "--"}%",
                                 icon = Icons.Default.WaterDrop,
-                                color = Color(0xFF1976D2),
-                                modifier = Modifier.weight(1f)
+                                color = if (iotState?.decision == "START IRRIGATION") Color.Red else Color(0xFF1976D2),
+                                modifier = Modifier.weight(1f).clickable { navController.navigate(Screen.SmartIrrigation.route) }
                             )
                             MetricItem(
-                                title = strings.healthScore,
-                                value = "0.78",
-                                icon = Icons.Default.Eco,
+                                title = "Location",
+                                value = weather?.location ?: "Rewa",
+                                icon = Icons.Default.LocationOn,
                                 color = Color(0xFF388E3C),
                                 modifier = Modifier.weight(1f)
                             )
@@ -221,7 +222,7 @@ fun DashboardScreen(navController: NavController, viewModel: AgroViewModel) {
                         
                         Row(modifier = Modifier.fillMaxWidth()) {
                             MetricItem(
-                                title = strings.weather,
+                                title = "Temperature",
                                 value = "${weather?.temperature ?: "--"}°C",
                                 icon = Icons.Default.Thermostat,
                                 color = Color(0xFFFF7043),

@@ -88,7 +88,8 @@ data class AppStrings(
     val cropInfo: String = "Crop Information",
     val nutrients: String = "Nutrients:",
     val season: String = "Season:",
-    val soil: String = "Soil:"
+    val soil: String = "Soil:",
+    val smartIrrigation: String = "Smart Irrigation"
 )
 
 val EnglishStrings = AppStrings()
@@ -135,7 +136,8 @@ val HindiStrings = AppStrings(
     gallery = "गैलरी",
     uploadPhoto = "बीमारियों या तनाव कारकों की पहचान करने के लिए प्रभावित फसल या पत्ती की फोटो अपलोड करें।",
     crops = "फसलें",
-    viewAll = "सभी देखें"
+    viewAll = "सभी देखें",
+    smartIrrigation = "स्मार्ट सिंचाई"
 )
 
 val MarathiStrings = AppStrings(
@@ -230,7 +232,8 @@ val PunjabiStrings = AppStrings(
     uploadPhoto = "ਬਿਮਾਰੀਆਂ ਜਾਂ ਤਣਾਅ ਦੇ ਕਾਰਕਾਂ ਦੀ ਪਛਾਣ ਕਰਨ ਲਈ ਪ੍ਰਭਾਵਿਤ ਫਸਲ ਜਾਂ ਪੱਤੇ ਦੀ ਫੋਟੋ ਅਪਲੋਡ ਕਰੋ।",
     crops = "ਫਸਲਾਂ",
     types = "ਕਿਸਮਾਂ",
-    viewAll = "ਸਭ ਦੇਖੋ"
+    viewAll = "ਸਭ ਦੇਖੋ",
+    smartIrrigation = "ਸਮਾਰਟ ਸਿੰਚਾਈ"
 )
 
 val GujaratiStrings = AppStrings(

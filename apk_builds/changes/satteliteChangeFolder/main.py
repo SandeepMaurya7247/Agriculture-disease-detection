@@ -14,7 +14,6 @@ import io
 import random
 import uuid
 from datetime import datetime
-import threading
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 from PIL import Image
@@ -24,21 +23,15 @@ from db.mongo_db import (
     get_user_by_email, create_user, save_report, save_stress_analysis
 )
 from services.cloudinary_service import upload_image
+from services import sentinel_service                      # 🛰️ Sentinel Hub
 from ml.ml import generate_report as get_fertilizer_report
 from ml import crop_rec_ml as crop_ml
-
-# Global state for diagnostics
-last_iot_data = {"status": "No data yet", "timestamp": None}
+from ml import crop_health_ml                             # 🌾 Crop Health ML
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "agrotech-ai-key-2024")
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-
-@app.before_request
-def monitor_traffic():
-    if "/api/iot/latest" not in request.path:
-        print(f"DEBUG: [INCOMING] {request.method} {request.path} from {request.remote_addr}")
 
 # Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") 
@@ -165,115 +158,6 @@ def get_weather():
     })
 
 # ----------------------------
-# 🔌 IOT MODULE (Sensor Data)
-# ----------------------------
-
-@app.route("/api/iot/test", methods=["GET"])
-def test_iot():
-    return jsonify({
-        "status": "active",
-        "message": "AgroTech IoT Server is running",
-        "server_ip": "10.91.148.102",
-        "port": 5000,
-        "endpoint": "/api/iot",
-        "last_received": last_iot_data
-    })
-
-@app.route("/api/iot/latest", methods=["GET"])
-def get_latest_iot():
-    print(f"DEBUG: Mobile App Polling -> Current State: {last_iot_data}")
-    return jsonify({
-        "success": True,
-        "data": last_iot_data
-    })
-
-@app.route("/api/iot/history", methods=["GET"])
-def get_iot_history():
-    return jsonify({
-        "success": True,
-        "history": iot_history_log
-    })
-
-@app.route("/iot/monitor")
-def iot_monitor():
-    log_html = "".join([f"<li>[{d['timestamp']}] Soil: {d['soil']}% | Temp: {d['temp']}°C -> {d['decision']}</li>" for d in reversed(iot_history_log)])
-    return f"""
-    <html>
-        <head><title>IoT Traffic Monitor</title><meta http-equiv='refresh' content='2'></head>
-        <body style='font-family:sans-serif; padding:40px; background:#f4f4f9;'>
-            <h1 style='color:#2e7d32;'>AgroTech AI - Live IoT Monitor</h1>
-            <p>Last 50 sensor requests received by this server:</p>
-            <div style='background:white; padding:20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);'>
-                <ul>{log_html or "<li>No data received yet. Connect your sensor to http://10.91.148.102:5000/api/iot</li>"}</ul>
-            </div>
-            <p style='color:gray; font-size:12px;'>Page refreshes automatically every 2 seconds.</p>
-        </body>
-    </html>
-    """
-
-@app.route("/sensor-data", methods=["POST"])
-@app.route("/api/iot", methods=["POST", "GET"])
-def receive_iot_data():
-    global last_iot_data, iot_history_log
-    try:
-        # 1. Try to get data from multiple sources (JSON, Form, Args)
-        if request.is_json:
-            data = request.json
-        elif request.form:
-            data = request.form.to_dict()
-        else:
-            data = request.args.to_dict()
-            
-        if not data:
-            return jsonify({"status": "error", "message": "No data found in request"}), 400
-            
-        # Normalize keys to lowercase for universal matching
-        data_lower = {k.lower(): v for k, v in data.items()}
-        
-        # 2. Extract and Normalize (support user's specific keys)
-        soil = float(data_lower.get("soil_moisture") or data_lower.get("soil") or data_lower.get("moisture") or 0)
-        temp = float(data_lower.get("temperature") or data_lower.get("temp") or 0)
-        humidity = float(data_lower.get("humidity") or 0)
-        
-        print(f"DEBUG: IoT Data Received -> Soil: {soil}, Temp: {temp} | Keys: {list(data.keys())}")
-
-        # 3. Decision Logic
-        if 0 < soil < 30:
-            decision = "START IRRIGATION"
-        elif soil == 0:
-            decision = "Waiting for Sensor..."
-        else:
-            decision = "NO IRRIGATION"
-
-        # Update global state AFTER decision
-        global last_iot_data
-        last_iot_data = {
-            "soil": soil,
-            "temp": temp,
-            "decision": decision,
-            "timestamp": str(datetime.utcnow())
-        }
-
-        # Save to MongoDB for history in Background
-        threading.Thread(target=save_report, args=({
-            "type": "iot_sensor_data",
-            "soil_moisture": soil,
-            "temperature": temp,
-            "decision": decision,
-            "timestamp": datetime.utcnow()
-        },)).start()
-
-        return jsonify({
-            "status": "received",
-            "decision": decision,
-            "soil": soil,
-            "temp": temp,
-            "timestamp": datetime.utcnow()
-        })
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-# ----------------------------
 # 🌾 CROP RECOMMENDATION (ML + MongoDB)
 # ----------------------------
 
@@ -287,10 +171,9 @@ def recommend_crop():
     humidity = data.get('humidity', 70.0)
     ph = data.get('ph', 6.5)
     rainfall = data.get('rainfall', 100.0)
-    lang = data.get('lang', 'en')
     
     # Use real ML model
-    report = crop_ml.generate_crop_report(n, p, k, temp, humidity, ph, rainfall, lang=lang)
+    report = crop_ml.generate_crop_report(n, p, k, temp, humidity, ph, rainfall)
     
     # Save to MongoDB in Background
     import threading
@@ -305,9 +188,6 @@ def recommend_crop():
     return jsonify({
         "success": True,
         "recommendation": report.get("Recommended Crop", "Unknown"),
-        "accuracy": report.get("Accuracy", "99.3%"),
-        "why_this_crop": report.get("Why this crop?", []),
-        "expert_explanation": report.get("Expert Agricultural Explanation", ""),
         "details": report.get("note", "Suitable for your climate.")
     })
 
@@ -326,10 +206,9 @@ def recommend_fertilizer():
     temp = data.get('temp', 25)
     humidity = data.get('humidity', 60)
     soil_type = data.get('soil_type', 'Loamy')
-    lang = data.get('lang', 'en')
 
     # Use real ML model
-    report = get_fertilizer_report(crop, n, p, k, moisture, temp, humidity, soil_type, lang=lang)
+    report = get_fertilizer_report(crop, n, p, k, moisture, temp, humidity, soil_type)
     
     # Save to MongoDB in Background (Turbo Boost)
     import threading
@@ -343,9 +222,6 @@ def recommend_fertilizer():
     return jsonify({
         "success": True,
         "recommendation": report.get("Recommended Fertilizer", "NPK 19-19-19"),
-        "accuracy": report.get("Accuracy", "98.7%"),
-        "why_this_fertilizer": report.get("Why this fertilizer?", []),
-        "expert_explanation": report.get("Expert Agricultural Explanation", ""),
         "deficiency": report.get("Nutrient Deficiency", {}),
         "schedule": report.get("Application Schedule", []),
         "details": f"Optimized for {soil_type} and {crop}."
@@ -360,18 +236,16 @@ def get_expert_advice(disease, lang='en'):
         "en": {
             "Bacterial Leaf Blight": "🔍 **Detailed Symptoms (Pehchan)**:\n• Initially, water-soaked streaks appear on leaf blades which eventually turn yellow-orange.\n• These streaks start from the tips and move down along the edges, forming wavy margins.\n• In severe cases, the entire leaf may dry up and turn straw-colored, significantly reducing yield.\n\n💊 **Advanced Chemical Treatment (Rasayanik)**:\n• **Spray 1**: Mix 1.5g of Streptocycline and 25g of Copper Oxychloride in 10 liters of clean water. Spray thoroughly on both sides of leaves.\n• **Spray 2**: If the disease persists after 12-15 days, apply Kocide (Copper Hydroxide) at 2g per liter of water.\n• Avoid spraying during high winds or rain; ensure the nozzle is fine for maximum coverage.\n\n🍃 **Comprehensive Organic Treatment (Jaivik)**:\n• **NSKE 5%**: Boil 5kg of Neem seed powder in 10L water overnight, filter it, and dilute in 100L water for spraying.\n• **Cow Dung Slurry**: Mix 1kg of fresh cow dung in 10L of water, filter it twice through a fine cloth, and spray to boost plant immunity.\n• Apply Trichoderma viride enriched farmyard manure to the soil.\n\n🛡️ **Expert Prevention (Bachav)**:\n• **Nutrient Management**: Reduce Nitrogen (Urea) and increase Potassium (K) to strengthen leaf cell walls.\n• **Water Management**: Ensure the field is not continuously flooded; follow 'Alternate Wetting and Drying' (AWD).\n• **Sanitation**: Remove weeds and infected straw from the previous season to prevent the bacteria from overwintering.",
             "Brown Spot": "🔍 **Detailed Symptoms (Pehchan)**:\n• Small, circular to oval, dark brown spots with a prominent yellow halo appear on leaves.\n• On older leaves, these spots expand and their centers turn light brown or gray.\n• Can lead to 'Grain Discoloration' if the infection reaches the panicles, reducing grain quality.\n\n💊 **Advanced Chemical Treatment (Rasayanik)**:\n• **Option 1**: Spray Mancozeb 75 WP (2.5g/L) or Zineb (2g/L) as soon as spots appear.\n• **Option 2**: For systemic control, use Hexaconazole 5% EC (2ml/L) or Propiconazole 25 EC (1ml/L).\n• Always use a 'Spreader/Sticker' agent during the monsoon to prevent the chemical from washing off.\n\n🍃 **Comprehensive Organic Treatment (Jaivik)**:\n• **Cow Urine**: Mix 1 liter of well-fermented cow urine with 10 liters of water and spray every 10 days.\n• **Seed Treatment**: Soak seeds in a solution of Pseudomonas fluorescens (10g/kg) before sowing.\n• Spraying Vermicompost wash provides essential micronutrients and suppressive microbes.\n\n🛡️ **Expert Prevention (Bachav)**:\n• **Soil Health**: Apply balanced fertilizers based on a soil test; specifically address Zinc or Manganese deficiencies.\n• **Water Management**: Avoid water stress (drought) as weakened plants are more susceptible to Brown Spot.\n• **Variety**: Always plant certified, disease-resistant seeds from reliable sources.",
-            "Healthy Leaf": "✅ **Health Status (Sthiti)**:\n• Your crop is currently in excellent health with no visible signs of fungal or bacterial infection.\n• Leaf color, texture, and turgidity are within the optimal range for this growth stage.\n\n🛡️ **Professional Maintenance Tips**:\n• **Monitoring**: Continue scouting the field twice a week, checking the lower canopy for early signs.\n• **Nutrition**: Apply the next dose of top-dressed Nitrogen only if required by the Leaf Color Chart (LCC).\n• **Bio-Stimulants**: You may spray Seaweed Extract (2ml/L) to enhance the crop's natural defense mechanism.",
-            "Leaf Smut": "🔍 **Detailed Symptoms (Pehchan)**:\n• Small, black, slightly raised spots (sori) appear on leaves.\n• These spots are often linear and follow the leaf veins.\n• Infected leaves may turn yellow and dry prematurely.\n\n💊 **Advanced Chemical Treatment (Rasayanik)**:\n• **Spray**: Apply Propiconazole 25 EC (1ml/L) or Hexaconazole 5% EC (2ml/L).\n• Ensure thorough coverage of the foliage.\n\n🍃 **Comprehensive Organic Treatment (Jaivik)**:\n• **Seed Treatment**: Treat seeds with Pseudomonas fluorescens (10g/kg).\n• **Crop Rotation**: Avoid growing rice in the same field for consecutive seasons.\n\n🛡️ **Expert Prevention (Bachav)**:\n• **Sanitation**: Burn infected crop debris after harvest.\n• **Balanced Nutrition**: Avoid excessive Nitrogen application."
+            "Healthy Leaf": "✅ **Health Status (Sthiti)**:\n• Your crop is currently in excellent health with no visible signs of fungal or bacterial infection.\n• Leaf color, texture, and turgidity are within the optimal range for this growth stage.\n\n🛡️ **Professional Maintenance Tips**:\n• **Monitoring**: Continue scouting the field twice a week, checking the lower canopy for early signs.\n• **Nutrition**: Apply the next dose of top-dressed Nitrogen only if required by the Leaf Color Chart (LCC).\n• **Bio-Stimulants**: You may spray Seaweed Extract (2ml/L) to enhance the crop's natural defense mechanism."
         },
         "hi": {
             "Bacterial Leaf Blight": "🔍 **विस्तृत लक्षण (Pehchan)**:\n• शुरुआती चरण में, पत्तियों पर पानी से भीगी हुई धारियां दिखाई देती हैं जो बाद में पीली-नारंगी हो जाती हैं।\n• ये धारियां नोकों से शुरू होती हैं और किनारों के साथ नीचे की ओर बढ़ती हैं, जिससे लहरदार किनारे बन जाते हैं।\n• गंभीर मामलों में, पूरी पत्ती सूख कर पुआल के रंग की हो सकती है, जिससे पैदावार काफी कम हो जाती है।\n\n💊 **उन्नत रासायनिक उपचार (Rasayanik)**:\n• **स्प्रे 1**: 10 लीटर साफ पानी में 1.5 ग्राम स्ट्रेप्टोसायक्लिन और 25 ग्राम कॉपर ऑक्सीक्लोराइड मिलाएं। पत्तियों के दोनों तरफ अच्छी तरह छिड़काव करें।\n• **स्प्रे 2**: यदि 12-15 दिनों के बाद भी बीमारी बनी रहती है, तो कोसाइड (कॉपर हाइड्रोक्साइड) का 2 ग्राम प्रति लीटर पानी में प्रयोग करें।\n• तेज हवा या बारिश के दौरान स्प्रे करने से बचें; सुनिश्चित करें कि नोजल बारीक हो।\n\n🍃 **व्यापक जैविक उपचार (Jaivik)**:\n• **नीम अर्क 5%**: 5 किलो नीम के बीज के पाउडर को रात भर 10 लीटर पानी में उबालें, इसे छान लें और छिड़काव के लिए 100 लीटर पानी में घोलें।\n• **गोबर का घोल**: 1 किलो ताज़ा गोबर को 10 लीटर पानी में मिलाएं, इसे दो बार बारीक कपड़े से छान लें, और छिड़काव करें।\n• मिट्टी में ट्राइकोडर्मा विरिडी से समृद्ध खाद डालें।\n\n🛡️ **विशेषज्ञ बचाव (Bachav)**:\n• **पोषक तत्व प्रबंधन**: नाइट्रोजन (यूरिया) कम करें और पोटाश (K) बढ़ाएं ताकि पत्तियों की दीवारें मजबूत हों।\n• **जल प्रबंधन**: सुनिश्चित करें कि खेत में लगातार पानी न भरा रहे; 'वैकल्पिक गीला और सुखाने' (AWD) की विधि अपनाएं।\n• **सफाई**: बैक्टीरिया को पनपने से रोकने के लिए पिछली फसल के अवशेषों को हटा दें।",
             "Brown Spot": "🔍 **विस्तृत लक्षण (Pehchan)**:\n• पत्तियों पर छोटे, गोल से अंडाकार, गहरे भूरे रंग के धब्बे दिखाई देते हैं जिनके चारों ओर पीला घेरा होता है।\n• पुरानी पत्तियों पर, ये धब्बे फैल जाते हैं और उनके केंद्र हल्के भूरे या धूसर हो जाते हैं।\n• यदि संक्रमण बालियों तक पहुँचता है, तो यह 'दानों के रंग बिगाड़ने' का कारण बन सकता है।\n\n💊 **उन्नत रासायनिक उपचार (Rasayanik)**:\n• **विकल्प 1**: धब्बे दिखाई देते ही मैंकोजेब 75 WP (2.5 ग्राम/लीटर) या ज़िनेब (2 ग्राम/लीटर) का छिड़काव करें।\n• **विकल्प 2**: व्यवस्थित नियंत्रण के लिए, हेक्साकोनाजोल 5% EC (2ml/L) या प्रोपिकोनाजोल 25 EC (1ml/L) का उपयोग करें।\n• मानसून के दौरान दवा को धुलने से बचाने के लिए हमेशा 'स्टिकर' का उपयोग करें।\n\n🍃 **व्यापक जैविक उपचार (Jaivik)**:\n• **गौमूत्र**: 1 लीटर अच्छी तरह सड़े हुए गौमूत्र को 10 लीटर पानी में मिलाएं और हर 10 दिन में छिड़काव करें।\n• **बीज उपचार**: बुवाई से पहले बीजों को स्यूडोमोनास फ्लोरेसेंस (10 ग्राम/किलो) के घोल में भिगो दें।\n• वर्मीकम्पोस्ट वॉश का छिड़काव सूक्ष्म पोषक तत्व और सुरक्षात्मक रोगाणु प्रदान करता है।\n\n🛡️ **विशेषज्ञ बचाव (Bachav)**:\n• **मिट्टी का स्वास्थ्य**: मिट्टी परीक्षण के आधार पर संतुलित उर्वरक डालें; विशेष रूप से जिंक या मैंगनीज की कमी को दूर करें।\n• **जल प्रबंधन**: जल तनाव (सूखा) से बचें क्योंकि कमजोर पौधे भूरे धब्बे के प्रति अधिक संवेदनशील होते हैं।\n• **बीज**: हमेशा विश्वसनीय स्रोतों से प्रमाणित, रोग-प्रतिरोधी बीज ही लगाएं।",
-            "Healthy Leaf": "✅ **स्वास्थ्य स्थिति (Sthiti)**:\n• आपकी फसल वर्तमान में उत्कृष्ट स्वास्थ्य में है और कवक या जीवाणु संक्रमण का कोई दृश्य संकेत नहीं है।\n• पत्तियों का रंग, बनावट और मजबूती इस विकास चरण के लिए इष्टतम सीमा के भीतर हैं।\n\n🛡️ **पेशेवर रखरखाव युक्तियाँ**:\n• **निगरानी**: सप्ताह में दो बार खेत का निरीक्षण जारी रखें, शुरुआती संकेतों के लिए निचले हिस्से की जांच करें।\n• **पोषण**: यूरिया की अगली खुराक केवल तभी डालें जब लीफ कलर चार्ट (LCC) द्वारा आवश्यक हो।\n• **बायो-स्टिमुलेंट्स**: आप फसल की प्राकृतिक रक्षा प्रणाली को बढ़ाने के लिए समुद्री शैवाल के अर्क (2ml/L) का छिड़काव कर सकते हैं।",
-            "Leaf Smut": "🔍 **विस्तृत लक्षण (Pehchan)**:\n• पत्तियों पर छोटे, काले, थोड़े उभरे हुए धब्बे (sori) दिखाई देते हैं।\n• ये धब्बे अक्सर रेखीय होते हैं और पत्ती की शिराओं का अनुसरण करते हैं।\n• संक्रमित पत्तियां पीली पड़ सकती हैं और समय से पहले सूख सकती हैं।\n\n💊 **उन्नत रासायनिक उपचार (Rasayanik)**:\n• **छिड़काव**: प्रोपिकोनाजोल 25 EC (1ml/L) या हेक्साकोनाजोल 5% EC (2ml/L) का प्रयोग करें।\n• सुनिश्चित करें कि पत्तियों का हर हिस्सा दवा से ढक जाए।\n\n🍃 **व्यापक जैविक उपचार (Jaivik)**:\n• **बीज उपचार**: बुवाई से पहले बीजों को स्यूडोमोनास फ्लोरेसेंस (10 ग्राम/किलो) से उपचारित करें।\n• **फसल चक्र**: एक ही खेत में लगातार धान न लगाएं।\n\n🛡️ **विशेषज्ञ बचाव (Bachav)**:\n• **सफाई**: कटाई के बाद संक्रमित फसल के अवशेषों को जला दें।\n• **संतुलित पोषण**: यूरिया का अत्यधिक उपयोग न करें।"
+            "Healthy Leaf": "✅ **स्वास्थ्य स्थिति (Sthiti)**:\n• आपकी फसल वर्तमान में उत्कृष्ट स्वास्थ्य में है और कवक या जीवाणु संक्रमण का कोई दृश्य संकेत नहीं है।\n• पत्तियों का रंग, बनावट और मजबूती इस विकास चरण के लिए इष्टतम सीमा के भीतर हैं।\n\n🛡️ **पेशेवर रखरखाव युक्तियाँ**:\n• **निगरानी**: सप्ताह में दो बार खेत का निरीक्षण जारी रखें, शुरुआती संकेतों के लिए निचले हिस्से की जांच करें।\n• **पोषण**: यूरिया की अगली खुराक केवल तभी डालें जब लीफ कलर चार्ट (LCC) द्वारा आवश्यक हो।\n• **बायो-स्टिमुलेंट्स**: आप फसल की प्राकृतिक रक्षा प्रणाली को बढ़ाने के लिए समुद्री शैवाल के अर्क (2ml/L) का छिड़काव कर सकते हैं।"
         }
     }
     selected_db = advice_db.get(lang, advice_db['en'])
-    return selected_db.get(disease, "🔍 Analyzing symptoms for expert diagnosis...")
+    return selected_db.get(disease, "⚠️ Unidentified stress. Please use Gemini for a detailed expert report.")
 
 def analyze_with_gemini(image_base64, lang='en'):
     """Objective expert analysis - No false positives for healthy leaves"""
@@ -410,18 +284,13 @@ def analyze_with_gemini(image_base64, lang='en'):
     }
     
     try:
-        print(f"DEBUG: Gemini API Requesting... URL: {GEMINI_URL[:30]}...")
         r = requests.post(f"{GEMINI_URL}?key={GEMINI_API_KEY}", json=payload, timeout=30)
         if r.ok:
-            data = r.json()
-            print("DEBUG: Gemini API Response OK")
-            text = data['candidates'][0]['content']['parts'][0]['text']
+            text = r.json()['candidates'][0]['content']['parts'][0]['text']
             clean_json = text.replace("```json", "").replace("```", "").strip()
             return json.loads(clean_json)
-        else:
-            print(f"DEBUG: Gemini API Error ({r.status_code}): {r.text}")
-    except Exception as e:
-        print(f"DEBUG: Gemini Exception: {e}")
+    except:
+        pass
     return None
 
 @app.route('/api/detect/stress', methods=['POST'])
@@ -455,37 +324,15 @@ def detect_stress():
             treatment = get_expert_advice(disease, lang)
             source = "AgroTech Local AI"
 
-            # 2. HYBRID LOGIC: Automatic Gemini Fallback for low confidence
-            if confidence < 0.50 or disease == "Other Disease":
-                print(f"DEBUG: Local AI unsure ({confidence:.2f}), calling Gemini...")
-                gemini_result = analyze_with_gemini(image_base64, lang)
-                if gemini_result:
-                    disease = gemini_result.get("label", disease)
-                    confidence = gemini_result.get("confidence", confidence)
-                    treatment = gemini_result.get("treatment", treatment)
-                    source = "AgroTeck Gemini AI (Auto-Fallback)"
-                else:
-                    source = "AgroTeck Local AI (Uncertain)"
-
+        # 2. LOCAL ONLY ANALYSIS (No Gemini fallback as requested)
         print(f"DEBUG: [FINAL DIAGNOSIS] Result: {disease} | Source: {source} | Conf: {confidence:.2f}")
 
     except Exception as e:
         print(f"DEBUG: AI Analysis Error: {e}")
-        # Try Gemini even on local error
-        try:
-            gemini_result = analyze_with_gemini(image_base64, lang)
-            if gemini_result:
-                disease = gemini_result.get("label", "Gemini Analysis")
-                confidence = gemini_result.get("confidence", 0.95)
-                treatment = gemini_result.get("treatment", "Expert advice generated.")
-                source = "AgroTeck Gemini AI (Error Recovery)"
-            else:
-                raise e
-        except:
-            disease = "Analysis Error"
-            confidence = 0.0
-            treatment = "Could not analyze the leaf. Please ensure the photo is clear."
-            source = "Local AI (Error)"
+        disease = "Analysis Error"
+        confidence = 0.0
+        treatment = "Could not analyze the leaf. Please ensure the photo is clear and try again."
+        source = "Local AI (Error)"
 
     # 3. Cloudinary Upload
     image_url = ""
@@ -513,6 +360,117 @@ def detect_stress():
         "treatment": treatment,
         "image_url": image_url
     })
+
+# ----------------------------
+# 🛰️ SATELLITE PRECISION AGRICULTURE MODULE (Sentinel Hub + NDVI + ML)
+# ----------------------------
+
+@app.route('/api/analyze-crop', methods=['POST'])
+def analyze_crop():
+    """
+    Precision Agriculture Pipeline
+    ================================
+    POST /api/analyze-crop
+
+    Request Body (JSON):
+        {
+            "latitude":  float,          # Centre of the farm (decimal degrees)
+            "longitude": float,          # Centre of the farm (decimal degrees)
+            "radius":    float,          # Area radius in metres (e.g. 500)
+
+            # Optional — passed directly into the ML model for richer predictions
+            "temperature": float,        # Ambient temperature (°C)
+            "humidity":    float,        # Relative humidity (%)
+            "rainfall":    float,        # Recent rainfall (mm)
+            "soil_ph":     float         # Soil pH value
+        }
+
+    Response (JSON):
+        {
+            "success":         bool,
+            "location":        { lat, lon, radius_m, bbox },
+            "ndvi_stats":      { mean_ndvi, max_ndvi, min_ndvi, std_ndvi, pixel_count },
+            "prediction":      str,      # e.g. "Healthy Vegetation"
+            "confidence":      float,
+            "severity":        str,
+            "ndvi_health_score": float,  # 0–100 normalised score
+            "recommendation":  { irrigation_needed, irrigation_action, ... }
+        }
+    """
+    data = request.json
+    if not data:
+        return jsonify({"success": False, "error": "Request body must be JSON."}), 400
+
+    # ── 1. Validate & extract inputs ─────────────────────────────────────────
+    try:
+        lat    = float(data["latitude"])
+        lon    = float(data["longitude"])
+        radius = float(data["radius"])
+    except (KeyError, TypeError, ValueError) as e:
+        return jsonify({
+            "success": False,
+            "error":   f"Missing or invalid field: {e}. Provide 'latitude', 'longitude', and 'radius'."
+        }), 400
+
+    # Optional extra sensor / weather data for the ML model
+    extra_inputs = {k: v for k, v in {
+        "temperature": data.get("temperature"),
+        "humidity":    data.get("humidity"),
+        "rainfall":    data.get("rainfall"),
+        "soil_ph":     data.get("soil_ph"),
+    }.items() if v is not None}
+
+    # ── 2. Fetch NDVI stats (live Sentinel Hub OR demo simulation) ────────────
+    try:
+        ndvi_stats = sentinel_service.get_ndvi_stats(lat, lon, radius)
+        bbox = ndvi_stats.pop("bbox", [])        # pull bbox out of stats dict
+        ndvi_stats.pop("demo_mode", None)        # strip internal flag
+        print(f"DEBUG [analyze-crop]: NDVI Stats = {ndvi_stats}")
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)}), 422
+    except RuntimeError as e:
+        print(f"ERROR [analyze-crop]: Satellite fetch failed: {e}")
+        return jsonify({"success": False, "error": f"Satellite data error: {e}"}), 502
+    except Exception as e:
+        print(f"ERROR [analyze-crop]: Unexpected NDVI error: {e}")
+        return jsonify({"success": False, "error": f"NDVI processing error: {e}"}), 500
+
+    # ── 3. Run ML model prediction ────────────────────────────────────────────
+    try:
+        ml_result = crop_health_ml.predict(ndvi_stats, extra_inputs or None)
+        print(f"DEBUG [analyze-crop]: ML Result = {ml_result['prediction']} (conf={ml_result['confidence']})")
+    except Exception as e:
+        print(f"ERROR [analyze-crop]: ML prediction failed: {e}")
+        return jsonify({"success": False, "error": f"ML model error: {e}"}), 500
+
+    # ── 4. Persist the analysis result to MongoDB (background thread) ─────────
+    import threading
+    threading.Thread(target=save_report, args=({
+        "type":        "satellite_crop_analysis",
+        "input":       {"latitude": lat, "longitude": lon, "radius_m": radius},
+        "bbox":         bbox,
+        "ndvi_stats":   ndvi_stats,
+        "ml_result":    ml_result,
+        "timestamp":    datetime.utcnow()
+    },)).start()
+
+    # ── 5. Return the full result ─────────────────────────────────────────────
+    return jsonify({
+        "success":   True,
+        "location": {
+            "latitude":  lat,
+            "longitude": lon,
+            "radius_m":  radius,
+            "bbox":      {"min_lon": bbox[0], "min_lat": bbox[1], "max_lon": bbox[2], "max_lat": bbox[3]} if bbox else {}
+        },
+        "ndvi_stats":        ndvi_stats,
+        "prediction":        ml_result["prediction"],
+        "confidence":        ml_result["confidence"],
+        "severity":          ml_result["severity"],
+        "ndvi_health_score": ml_result["ndvi_health_score"],
+        "recommendation":    ml_result["recommendation"]
+    })
+
 
 # ----------------------------
 # 💬 ADVANCED CHATBOT MODULE (Tavily + Groq + LangGraph)

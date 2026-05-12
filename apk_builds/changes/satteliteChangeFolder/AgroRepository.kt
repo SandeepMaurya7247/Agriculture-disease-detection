@@ -29,7 +29,7 @@ class AgroRepository(private val apiService: ApiService) {
         return response.body()?.get("response") ?: "Error connecting to AI"
     }
 
-    suspend fun getLatestIot(): Response<IotResponse> = apiService.getLatestIot()
-
-    suspend fun simulateIot(soil: Double, temp: Double) = apiService.simulateIot(soil, temp)
+    // 🛰️ Satellite NDVI crop health analysis
+    suspend fun analyzeCrop(request: CropAnalysisRequest): Response<CropAnalysisResponse> =
+        apiService.analyzeCrop(request)
 }

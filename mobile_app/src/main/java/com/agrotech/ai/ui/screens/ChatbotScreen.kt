@@ -37,14 +37,16 @@ fun ChatbotScreen(navController: NavController, viewModel: AgroViewModel) {
     val context = LocalContext.current
     val messages by viewModel.chatMessages.collectAsState()
     var text by remember { mutableStateOf("") }
-    var isHindi by remember { mutableStateOf(false) }
+    val selectedLang by viewModel.selectedLanguage.collectAsState()
+    val isHindi = selectedLang == "hi"
+    val isPunjabi = selectedLang == "pa"
 
     val pendingQuery by viewModel.pendingChatQuery.collectAsState()
 
     // Handle auto-query if coming from "Learn how to grow"
     LaunchedEffect(pendingQuery) {
         pendingQuery?.let {
-            viewModel.sendChatMessage(it, if (isHindi) "hi" else "en")
+            viewModel.sendChatMessage(it, selectedLang)
             viewModel.setPendingChatQuery(null) // Clear after sending
         }
     }
@@ -67,7 +69,11 @@ fun ChatbotScreen(navController: NavController, viewModel: AgroViewModel) {
         var ttsInstance: TextToSpeech? = null
         ttsInstance = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                ttsInstance?.language = if (isHindi) Locale("hi", "IN") else Locale.US
+                ttsInstance?.language = when {
+                    isHindi -> Locale("hi", "IN")
+                    isPunjabi -> Locale("pa", "IN")
+                    else -> Locale.US
+                }
             }
         }
         ttsInstance
@@ -113,14 +119,28 @@ fun ChatbotScreen(navController: NavController, viewModel: AgroViewModel) {
                     IconButton(onClick = {
                         val lastBotMessage = messages.lastOrNull { !it.isUser }?.text
                         if (lastBotMessage != null) {
-                            tts?.language = if (isHindi) Locale("hi", "IN") else Locale.US
+                            tts?.language = when {
+                                isHindi -> Locale("hi", "IN")
+                                isPunjabi -> Locale("pa", "IN")
+                                else -> Locale.US
+                            }
                             tts?.speak(lastBotMessage, TextToSpeech.QUEUE_FLUSH, null, null)
                         }
                     }) {
                         Icon(Icons.Default.VolumeUp, contentDescription = "Speak", tint = MaterialTheme.colorScheme.primary)
                     }
-                    TextButton(onClick = { isHindi = !isHindi }) {
-                        Text(if (isHindi) "हिन्दी" else "EN", fontWeight = FontWeight.Bold)
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = CircleShape,
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Text(
+                            selectedLang.uppercase(), 
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             )
@@ -194,8 +214,16 @@ fun ChatbotScreen(navController: NavController, viewModel: AgroViewModel) {
                             IconButton(onClick = {
                                 val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                                     putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, if (isHindi) "hi-IN" else "en-US")
-                                    putExtra(RecognizerIntent.EXTRA_PROMPT, if (isHindi) "बोलिए..." else "Speak now...")
+                                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, when {
+                                        isHindi -> "hi-IN"
+                                        isPunjabi -> "pa-IN"
+                                        else -> "en-US"
+                                    })
+                                    putExtra(RecognizerIntent.EXTRA_PROMPT, when {
+                                        isHindi -> "बोलिए..."
+                                        isPunjabi -> "बोलो..."
+                                        else -> "Speak now..."
+                                    })
                                 }
                                 speechLauncher.launch(intent)
                             }) {
@@ -207,7 +235,7 @@ fun ChatbotScreen(navController: NavController, viewModel: AgroViewModel) {
                     FloatingActionButton(
                         onClick = {
                             if (text.isNotBlank()) {
-                                viewModel.sendChatMessage(text, if (isHindi) "hi" else "en")
+                                viewModel.sendChatMessage(text, selectedLang)
                                 text = ""
                             }
                         },

@@ -1,0 +1,402 @@
+================================================================
+  AGROTECH AI — SATELLITE CROP ANALYSIS FEATURE
+  Complete Change Log
+  Date: 13-May-2026
+================================================================
+
+OVERVIEW
+--------
+This document describes every file that was created or modified
+to implement the Satellite Precision Agriculture feature using
+Sentinel-2 NDVI data from Sentinel Hub.
+
+The feature allows farmers to:
+  1. Enter their farm latitude, longitude, and radius (or use GPS).
+  2. Tap "Analyze Crop Health" to send data to the backend.
+  3. The backend fetches real Sentinel-2 NDVI satellite imagery
+     (or simulates realistic data in Demo Mode).
+  4. An ML model classifies crop health and returns:
+       - Prediction label  (e.g. "Healthy Vegetation")
+       - NDVI statistics   (mean, max, min, std, pixel count)
+       - Health score      (0-100)
+       - Confidence        (0-1)
+       - Severity          (e.g. "Optimal", "Critical")
+       - Recommendations   (irrigation, nutrients, field actions)
+  5. The Android app displays the full dashboard with cards,
+     a health score progress bar, and detailed recommendations.
+
+================================================================
+  BACKEND FILES  (Python / Flask)
+================================================================
+
+----------------------------------------------------------------
+FILE 1: backend/services/sentinel_service.py
+  STATUS: FULLY REWRITTEN
+----------------------------------------------------------------
+WHAT CHANGED:
+  - Added _is_demo_mode() function:
+      Returns True when SENTINEL_HUB_CLIENT_ID is not configured.
+
+  - Added _simulate_ndvi_stats(lat, lon) function:
+      Generates realistic, deterministic NDVI statistics seeded
+      by the farm coordinates. The same lat/lon always produces
+      the same simulated NDVI values. This lets the full pipeline
+      work without real Sentinel Hub credentials.
+      Simulated NDVI range: 0.30 - 0.72 (typical Indian farmland).
+
+  - Added get_ndvi_stats(lat, lon, radius_m) — NEW ENTRY POINT:
+      Unified function used by main.py.
+      Internally calls either:
+        a) _simulate_ndvi_stats() if no credentials (Demo Mode)
+        b) get_sentinel_token() + fetch_ndvi_image() + 
+           extract_ndvi_stats() if credentials are present (Live)
+      Returns: { mean_ndvi, max_ndvi, min_ndvi, std_ndvi,
+                 pixel_count, bbox, demo_mode }
+
+  - Updated fetch_ndvi_image() time range:
+      Changed "to" date from "2025-12-31" to "2026-12-31"
+      to include the current year's satellite imagery.
+
+  - Fixed all Unicode characters in print statements:
+      Replaced → with -> to avoid charmap encoding errors on
+      Windows Python 3.14.
+
+WHY:
+  The original code called get_sentinel_token() directly, which
+  raised RuntimeError and returned HTTP 503 when no Client ID
+  was configured. The app completely failed with a 503 error.
+
+----------------------------------------------------------------
+FILE 2: backend/ml/crop_health_ml.py
+  STATUS: NEW FILE (created for this feature)
+----------------------------------------------------------------
+WHAT CHANGED / ADDED:
+  - NDVI_CLASSES dictionary:
+      Maps class index to label:
+        0 = "Critical Stress"
+        1 = "Moderate Stress"
+        2 = "Healthy Vegetation"
+        3 = "Sparse / Bare Soil"
+        4 = "Water Body / No Crop"
+
+  - _ADVICE_DB dictionary:
+      Stores expert advice for each class:
+        - severity label (emoji + text)
+        - irrigation_needed (True/False)
+        - irrigation_recommendation (what to do)
+        - nutrient_action (fertilizer advice)
+        - field_action (scouting/inspection advice)
+        - next_check_days (when to re-analyze)
+
+  - build_feature_vector(ndvi_stats, extra_inputs):
+      Builds a 5-feature (or 9-feature with weather) vector:
+        [mean_ndvi, max_ndvi, min_ndvi, std_ndvi,
+         pixel_count_normalized, (temp, humidity,
+         rainfall, soil_ph if provided)]
+
+  - _rule_based_prediction(mean_ndvi):
+      Rule-based fallback classifier:
+        NDVI < 0.0    -> "Water Body / No Crop"  (conf 0.92)
+        NDVI < 0.10   -> "Critical Stress"        (conf 0.88)
+        NDVI < 0.20   -> "Moderate Stress"        (conf 0.80)
+        NDVI < 0.40   -> "Sparse / Bare Soil"     (conf 0.74)
+        NDVI < 0.75   -> "Healthy Vegetation"     (conf 0.91)
+        NDVI >= 0.75  -> "Healthy Vegetation"     (conf 0.96)
+
+  - predict(ndvi_stats, extra_inputs):
+      Main function called by main.py.
+      Returns full result dict:
+        { prediction, confidence, severity,
+          ndvi_health_score (0-100), recommendation }
+
+WHY:
+  Needed an ML module to interpret raw NDVI numbers into
+  actionable crop health insights.
+
+----------------------------------------------------------------
+FILE 3: backend/main.py
+  STATUS: MODIFIED
+----------------------------------------------------------------
+WHAT CHANGED:
+  - Added import for crop_health_ml at the top:
+      from ml import crop_health_ml
+
+  - Added import for sentinel_service at the top:
+      from services import sentinel_service
+
+  - Replaced the old 3-step satellite pipeline in
+    analyze_crop() endpoint (/api/analyze-crop POST):
+
+    OLD (broken) flow:
+      Step 1: calculate_bounding_box()
+      Step 2: get_sentinel_token()    <-- raised RuntimeError
+                                           if no credentials
+                                           -> returned 503
+      Step 3: fetch_ndvi_image()
+      Step 4: extract_ndvi_stats()
+      Step 5: crop_health_ml.predict()
+
+    NEW (fixed) flow:
+      Step 1: sentinel_service.get_ndvi_stats(lat, lon, radius)
+              [handles Demo Mode internally - no 503 anymore]
+      Step 2: crop_health_ml.predict(ndvi_stats, extra_inputs)
+      Step 3: save_report() in background thread
+      Step 4: return JSON response
+
+  - extra_inputs extraction simplified to a one-line dict
+    comprehension that filters out None values.
+
+WHY:
+  The old code returned HTTP 503 "Satellite authentication
+  failed" whenever Sentinel Hub credentials were missing.
+  The new code uses the unified get_ndvi_stats() which
+  automatically falls back to simulation.
+
+----------------------------------------------------------------
+FILE 4: backend/db/mongo_db.py
+  STATUS: REWRITTEN (graceful failure)
+----------------------------------------------------------------
+WHAT CHANGED:
+  - Wrapped MongoClient() in try/except:
+      Before: Called MongoClient(MONGO_URI) at module level.
+              If MONGO_URI was wrong/missing, Python crashed
+              during import before Flask even started.
+      After:  Checks if MONGO_URI is set and not a placeholder.
+              If missing: prints a warning and sets all
+              collections to None (demo mode).
+              All CRUD functions (get_user_by_email, create_user,
+              save_report, save_stress_analysis) safely return
+              None or a fake result when DB is unavailable.
+
+  - Added _PLACEHOLDER_URIS set to detect unconfigured URIs:
+      {"", "mongodb+srv://<username>:<password>@<cluster>..."}
+
+  - Added 5000ms serverSelectionTimeoutMS to MongoClient
+    so it doesn't hang for 30s on bad connections.
+
+WHY:
+  Without this fix the backend crashed immediately on startup
+  because .env had a placeholder MONGO_URI. The server never
+  reached the satellite endpoint at all.
+
+----------------------------------------------------------------
+FILE 5: backend/.env
+  STATUS: NEW FILE (created from .env.example)
+----------------------------------------------------------------
+WHAT CHANGED:
+  - Created backend/.env by copying backend/.env.example
+  - This file was completely missing before.
+  - Without it, load_dotenv() loaded nothing and all API
+    keys showed "No" in the debug output.
+
+IMPORTANT:
+  - Fill in real values for production use:
+      SENTINEL_HUB_CLIENT_ID = your real client ID
+      SENTINEL_HUB_CLIENT_SECRET = your real secret
+      MONGO_URI = your MongoDB Atlas URI
+      GROQ_API_KEY, TAVILY_API_KEY, WEATHER_API_KEY, etc.
+  - NEVER commit .env to Git (it's in .gitignore).
+
+================================================================
+  ANDROID FILES  (Kotlin / Jetpack Compose)
+================================================================
+
+----------------------------------------------------------------
+FILE 6: mobile_app/.../data/model/Models.kt
+  STATUS: MODIFIED (new data classes added)
+----------------------------------------------------------------
+WHAT CHANGED / ADDED:
+  - CropAnalysisRequest data class:
+      { latitude: Double, longitude: Double, radius: Double,
+        temperature?: Double, humidity?: Double,
+        rainfall?: Double, soil_ph?: Double }
+      Sent as POST body to /api/analyze-crop
+
+  - NdviStats data class:
+      { mean_ndvi, max_ndvi, min_ndvi, std_ndvi, pixel_count }
+      Maps JSON keys via @SerializedName annotations.
+
+  - CropHealthRecommendation data class:
+      { irrigationNeeded, irrigationAction, nutrientAction,
+        fieldAction, nextCheckDays }
+
+  - CropAnalysisResponse data class:
+      { success, prediction, confidence, severity,
+        healthScore, ndviStats, recommendation, error? }
+      Top-level response from /api/analyze-crop
+
+WHY:
+  Retrofit needs Kotlin data classes that match the backend
+  JSON response structure for automatic deserialization.
+
+----------------------------------------------------------------
+FILE 7: mobile_app/.../data/remote/ApiService.kt
+  STATUS: MODIFIED (new endpoint added)
+----------------------------------------------------------------
+WHAT CHANGED:
+  - Added analyzeCrop() Retrofit endpoint:
+      @POST("analyze-crop")
+      suspend fun analyzeCrop(
+          @Body request: CropAnalysisRequest
+      ): Response<CropAnalysisResponse>
+
+WHY:
+  The Retrofit interface needed a declaration for the
+  /api/analyze-crop endpoint.
+
+----------------------------------------------------------------
+FILE 8: mobile_app/.../data/remote/RetrofitClient.kt
+  STATUS: MODIFIED
+----------------------------------------------------------------
+WHAT CHANGED:
+  - Changed BASE_URL from hardcoded WiFi IP:
+      OLD: "http://10.232.82.1:5000/api/"
+      NEW: "http://127.0.0.1:5000/api/"
+
+  - The new URL works via USB cable + adb reverse:
+      Command: adb reverse tcp:5000 tcp:5000
+      Effect:  Port 5000 on the phone tunnels to port 5000
+               on the PC. No WiFi dependency.
+
+  - Increased network timeouts:
+      connectTimeout: 15s -> 20s
+      readTimeout:    60s -> 90s  (Sentinel Hub can take 45s)
+      writeTimeout:   60s -> 90s
+
+WHY:
+  The hardcoded WiFi IP breaks whenever the PC gets a new
+  DHCP IP address. Using 127.0.0.1 via adb reverse is
+  more reliable for development.
+
+----------------------------------------------------------------
+FILE 9: mobile_app/.../data/repository/AgroRepository.kt
+  STATUS: MODIFIED (new function added)
+----------------------------------------------------------------
+WHAT CHANGED:
+  - Added analyzeCrop() function:
+      suspend fun analyzeCrop(
+          request: CropAnalysisRequest
+      ): Response<CropAnalysisResponse> =
+          apiService.analyzeCrop(request)
+
+WHY:
+  The Repository layer needed a function to bridge the
+  ViewModel and the Retrofit ApiService.
+
+----------------------------------------------------------------
+FILE 10: mobile_app/.../viewmodel/AgroViewModel.kt
+  STATUS: MODIFIED (new state + function added)
+----------------------------------------------------------------
+WHAT CHANGED:
+  - Added new StateFlows:
+      _cropAnalysisResult: MutableStateFlow<CropAnalysisResponse?>
+      _isSatelliteLoading: MutableStateFlow<Boolean>
+
+  - Added analyzeCrop(lat, lon, radiusM) function:
+      Sets _isSatelliteLoading = true
+      Clears previous result and error
+      Calls repository.analyzeCrop(CropAnalysisRequest(...))
+      On success: sets _cropAnalysisResult
+      On HTTP error: sets _errorState with code + message
+      On exception: sets _errorState with network error message
+      Always sets _isSatelliteLoading = false in finally block
+
+WHY:
+  The ViewModel is the bridge between the UI (NDVIScreen)
+  and the data layer. It manages loading/error/result state
+  that the Compose UI observes via collectAsState().
+
+----------------------------------------------------------------
+FILE 11: mobile_app/.../ui/screens/MiscScreens.kt
+  STATUS: MODIFIED (new screen + bug fixes)
+----------------------------------------------------------------
+WHAT CHANGED:
+
+  A) BUG FIX — Compilation errors fixed:
+     Line 481-483: Changed True -> true (Kotlin is case-sensitive,
+                   Python's True is not valid in Kotlin)
+     Line 731:     Fixed Double to Float type mismatch:
+                   OLD: (data.healthScore / 100f).coerceIn(0f, 1f)
+                   NEW: (data.healthScore / 100.0).toFloat()
+                        .coerceIn(0f, 1f)
+                   healthScore is a Double field, dividing by 100f
+                   caused a type mismatch compile error.
+
+  B) NEW — NDVIScreen composable:
+     Full satellite analysis UI screen including:
+
+     Input Card:
+       - "Auto-fill from GPS" button using LocationManager
+       - Latitude + Longitude text fields (decimal input)
+       - Radius field with supporting text (100m - 50,000m)
+       - Error banner (red surface) for validation messages
+       - "Analyze Crop Health" button with loading state
+       - "Contacting Satellite..." text during loading
+
+     Result Cards (shown after successful analysis):
+       Card 1 - Health Score Hero:
+         - Severity label (e.g. "Optimal", "Critical")
+         - Prediction label (e.g. "Healthy Vegetation")
+         - Animated health score progress bar (0-100)
+         - Confidence percentage
+
+       Card 2 - NDVI Satellite Data:
+         - Mean / Max / Min / Std Dev stat boxes
+         - Pixel count from Sentinel-2 imagery
+
+       Card 3 - Field Recommendations:
+         - Irrigation badge (blue = needed, green = not needed)
+         - Irrigation action text
+         - Nutrient action text
+         - Field action text
+         - "Next satellite check in X days" banner
+
+  C) NEW Helper Composables:
+     - NdviStatBox(label, value, color, modifier)
+     - RecommendationRow(title, body)
+     - severityColor(severity): Color  — maps severity string
+       to a display color (red/orange/yellow/green/grey)
+
+WHY:
+  The NDVIScreen is the complete user interface for the
+  satellite crop analysis feature. Farmers interact with
+  this screen to get real-time crop health insights.
+
+================================================================
+  SUMMARY TABLE
+================================================================
+
+ #  | File                    | Type    | Status
+----|-------------------------|---------|------------------
+ 1  | sentinel_service.py     | Backend | Rewritten
+ 2  | crop_health_ml.py       | Backend | New File
+ 3  | main.py                 | Backend | Modified
+ 4  | mongo_db.py             | Backend | Rewritten
+ 5  | .env                    | Backend | New File
+ 6  | Models.kt               | Android | Modified
+ 7  | ApiService.kt           | Android | Modified
+ 8  | RetrofitClient.kt       | Android | Modified
+ 9  | AgroRepository.kt       | Android | Modified
+ 10 | AgroViewModel.kt        | Android | Modified
+ 11 | MiscScreens.kt          | Android | Modified
+
+Total: 11 files (5 Backend + 6 Android)
+
+================================================================
+  HOW TO SWITCH FROM DEMO MODE TO LIVE SATELLITE DATA
+================================================================
+
+1. Register at: https://apps.sentinel-hub.com/
+2. Go to User Settings -> OAuth Clients
+3. Create a new OAuth Client
+4. Copy the Client ID and Client Secret
+5. Open backend/.env and fill in:
+     SENTINEL_HUB_CLIENT_ID=<your_client_id>
+     SENTINEL_HUB_CLIENT_SECRET=<your_client_secret>
+6. Restart the backend server.
+7. The system will automatically use real Sentinel-2
+   satellite imagery instead of simulated data.
+
+================================================================
+  END OF CHANGE LOG
+================================================================

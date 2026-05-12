@@ -238,7 +238,7 @@ def lime_predict_fn(x):
     # Here we'll just use a wrapper that fills in the missing columns.
     return [0] * len(model.label_encoder.classes_) # Placeholder
 
-def generate_report(crop, n, p, k, moisture, temp, humidity, soil_type):
+def generate_report(crop, n, p, k, moisture, temp, humidity, soil_type, lang='en'):
     input_data = {
         "Temparature": temp,
         "Humidity": humidity,
@@ -287,7 +287,7 @@ def generate_report(crop, n, p, k, moisture, temp, humidity, soil_type):
         lime_output = []
 
     # 3. AI Expert Advice
-    expert_explanation = rag_explanation(fertilizer, lime_output)
+    expert_explanation = rag_explanation(fertilizer, lime_output, lang=lang)
 
     # 4. Standard Report
     report = AgronomyEngine.generate_report(crop, fertilizer, n, p, k)
@@ -306,7 +306,7 @@ def explain_with_lime(input_data):
     exp = explainer.explain_instance(X_trans[0], lime_predict_fn, num_features=8)
     return model.predict_fertilizer(input_data), [{"feature": f, "impact": round(w, 3)} for f, w in exp.as_list()]
 
-def rag_explanation(fertilizer, lime_output):
+def rag_explanation(fertilizer, lime_output, lang='en'):
     vector_db, llm = get_rag_components()
     if not vector_db or not llm: return "RAG Explanation unavailable."
     
@@ -327,6 +327,9 @@ def rag_explanation(fertilizer, lime_output):
     prompt = f"""
 You are a Senior Agronomist and Fertilizer Specialist.
 Based on ICAR guidelines, explain why {fertilizer} is the absolute best choice for this field.
+
+IMPORTANT: You MUST write the entire report in the following language: {lang}. 
+(If lang is 'hi', write in Hindi; if 'pa', write in Punjabi; otherwise English).
 
 Context from Knowledge Base:
 {context}

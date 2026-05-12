@@ -22,7 +22,8 @@ data class WeatherData(
     val humidity: Double? = null,
     val condition: String? = null,
     val windSpeed: Double? = null,
-    val iconUrl: String? = null
+    val iconUrl: String? = null,
+    val location: String? = null
 )
 
 data class SoilData(
@@ -33,7 +34,8 @@ data class SoilData(
     @SerializedName("ph") val ph: Float,
     @SerializedName("temp") val temperature: Float = 25.0f,
     val humidity: Float = 70.0f,
-    val rainfall: Float = 100.0f
+    val rainfall: Float = 100.0f,
+    val lang: String = "en"
 )
 
 data class RecommendationResponse(
@@ -79,5 +81,18 @@ data class FertilizerRequest(
     val temp: Double,
     val humidity: Double,
     @SerializedName("soil_type") val soilType: String,
-    @SerializedName("crop_type") val cropType: String
+    @SerializedName("crop_type") val cropType: String,
+    val lang: String = "en"
+)
+
+data class IotData(
+    val soil: Double? = null,
+    val temp: Double? = null,
+    val decision: String? = null,
+    val timestamp: String? = null
+)
+
+data class IotResponse(
+    val success: Boolean,
+    val data: IotData
 )

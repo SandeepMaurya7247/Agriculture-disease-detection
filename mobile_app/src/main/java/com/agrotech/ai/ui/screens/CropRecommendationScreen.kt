@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import com.agrotech.ai.data.model.SoilData
 import com.agrotech.ai.data.model.RecommendationResponse
 import com.agrotech.ai.ui.navigation.Screen
@@ -88,125 +89,105 @@ fun CropRecommendationScreen(navController: NavController, viewModel: AgroViewMo
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    "Provide soil nutrients and climate data for accurate AI prediction",
+                    "Provide soil nutrients and climate data for accurate predictions.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.height(20.dp))
-            }
-
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                AgroTextField(
-                                    value = n, 
-                                    onValueChange = { n = it }, 
-                                    label = "Nitrogen (N)", 
-                                    leadingIcon = Icons.Default.Science,
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Box(modifier = Modifier.weight(1f)) {
-                                AgroTextField(
-                                    value = p, 
-                                    onValueChange = { p = it }, 
-                                    label = "Phosphorous (P)", 
-                                    leadingIcon = Icons.Default.Science,
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                AgroTextField(
-                                    value = k, 
-                                    onValueChange = { k = it }, 
-                                    label = "Potassium (K)", 
-                                    leadingIcon = Icons.Default.Science,
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Box(modifier = Modifier.weight(1f)) {
-                                AgroTextField(
-                                    value = ph, 
-                                    onValueChange = { ph = it }, 
-                                    label = "Soil pH", 
-                                    leadingIcon = Icons.Default.Opacity,
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                AgroTextField(
-                                    value = humidity, 
-                                    onValueChange = { humidity = it }, 
-                                    label = "Humidity (%)", 
-                                    leadingIcon = Icons.Default.Cloud,
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-                                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Next) })
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Box(modifier = Modifier.weight(1f)) {
-                                AgroTextField(
-                                    value = rainfall, 
-                                    onValueChange = { rainfall = it }, 
-                                    label = "Rainfall (mm)", 
-                                    leadingIcon = Icons.Default.WaterDrop,
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-                                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            item {
                 Spacer(modifier = Modifier.height(24.dp))
-                Button(
-                    onClick = {
-                        viewModel.getCropRecommendation(
-                            SoilData(
-                                moisture = 0.0,
-                                nitrogen = n.toFloatOrNull() ?: 0f,
-                                phosphorus = p.toFloatOrNull() ?: 0f,
-                                potassium = k.toFloatOrNull() ?: 0f,
-                                ph = ph.toFloatOrNull() ?: 0f,
-                                humidity = humidity.toFloatOrNull() ?: 70f,
-                                rainfall = rainfall.toFloatOrNull() ?: 100f
-                            )
+            }
+
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        AgroTextField(
+                            value = n, onValueChange = { n = it },
+                            label = "Nitrogen (N)", leadingIcon = Icons.Default.Science,
+                            modifier = Modifier.weight(1f), 
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
                         )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                    } else {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.AutoAwesome, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(strings.getRecommendation, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        AgroTextField(
+                            value = p, onValueChange = { p = it },
+                            label = "Phosphorous (P)", leadingIcon = Icons.Default.Science,
+                            modifier = Modifier.weight(1f), 
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
+                        )
+                    }
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        AgroTextField(
+                            value = k, onValueChange = { k = it },
+                            label = "Potassium (K)", leadingIcon = Icons.Default.Science,
+                            modifier = Modifier.weight(1f), 
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
+                        )
+                        AgroTextField(
+                            value = ph, onValueChange = { ph = it },
+                            label = "Soil pH", leadingIcon = Icons.Default.InvertColors,
+                            modifier = Modifier.weight(1f), 
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
+                        )
+                    }
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        AgroTextField(
+                            value = humidity, onValueChange = { humidity = it },
+                            label = "Humidity (%)", leadingIcon = Icons.Default.Cloud,
+                            modifier = Modifier.weight(1f), 
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
+                        )
+                        AgroTextField(
+                            value = rainfall, onValueChange = { rainfall = it },
+                            label = "Rainfall (mm)", leadingIcon = Icons.Default.WaterDrop,
+                            modifier = Modifier.weight(1f), 
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = {
+                                focusManager.clearFocus()
+                                val data = SoilData(
+                                    nitrogen = n.toFloatOrNull() ?: 0.0f,
+                                    phosphorus = p.toFloatOrNull() ?: 0.0f,
+                                    potassium = k.toFloatOrNull() ?: 0.0f,
+                                    ph = ph.toFloatOrNull() ?: 0.0f,
+                                    humidity = humidity.toFloatOrNull() ?: 70.0f,
+                                    rainfall = rainfall.toFloatOrNull() ?: 100.0f,
+                                    temperature = 25.0f,
+                                    moisture = 20.0
+                                )
+                                viewModel.getCropRecommendation(data)
+                            })
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        onClick = {
+                            focusManager.clearFocus()
+                            val data = SoilData(
+                                nitrogen = n.toFloatOrNull() ?: 0.0f,
+                                phosphorus = p.toFloatOrNull() ?: 0.0f,
+                                potassium = k.toFloatOrNull() ?: 0.0f,
+                                ph = ph.toFloatOrNull() ?: 0.0f,
+                                humidity = humidity.toFloatOrNull() ?: 70.0f,
+                                rainfall = rainfall.toFloatOrNull() ?: 100.0f,
+                                temperature = 25.0f,
+                                moisture = 20.0
+                            )
+                            viewModel.getCropRecommendation(data)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                        } else {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.AutoAwesome, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(strings.getRecommendation, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            }
                         }
                     }
                 }
@@ -225,29 +206,29 @@ fun CropRecommendationScreen(navController: NavController, viewModel: AgroViewMo
 fun getCropImageUrl(crop: String): String {
     val cleanCrop = crop.trim().lowercase()
     return when (cleanCrop) {
-        "rice" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Paddy_field_in_Sri_Lanka.jpg/800px-Paddy_field_in_Sri_Lanka.jpg"
-        "maize" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Corn_Field_in_the_Evening.jpg/800px-Corn_Field_in_the_Evening.jpg"
-        "chickpea" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Chickpea.jpg/800px-Chickpea.jpg"
-        "kidneybeans" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Kidney_beans_in_a_bowl.jpg/800px-Kidney_beans_in_a_bowl.jpg"
-        "pigeonpeas" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Pigeon_peas_at_market.jpg/800px-Pigeon_peas_at_market.jpg"
-        "mothbeans" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Moth_bean_vigna_aconitifolia.jpg/800px-Moth_bean_vigna_aconitifolia.jpg"
-        "mungbean" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Mung_beans.jpg/800px-Mung_beans.jpg"
-        "blackgram" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Vigna_mungo_seeds.jpg/800px-Vigna_mungo_seeds.jpg"
-        "lentil" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Lentils_in_a_bowl_2.jpg/800px-Lentils_in_a_bowl_2.jpg"
-        "pomegranate" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Pomegranates_%28Punica_granatum%29.jpg/800px-Pomegranates_%28Punica_granatum%29.jpg"
-        "banana" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Bananas.jpg/800px-Bananas.jpg"
-        "mango" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Mango_on_tree_in_Kerala.jpg/800px-Mango_on_tree_in_Kerala.jpg"
-        "grapes" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Grapes.jpg/800px-Grapes.jpg"
-        "watermelon" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Watermelons.jpg/800px-Watermelons.jpg"
-        "muskmelon" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Cantaloupe.jpg/800px-Cantaloupe.jpg"
-        "apple" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/800px-Red_Apple.jpg"
-        "orange" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Orange-Fruit-Pieces.jpg/800px-Orange-Fruit-Pieces.jpg"
-        "papaya" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Papaya_cross_section_BNC.jpg/800px-Papaya_cross_section_BNC.jpg"
-        "coconut" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Coconut.jpg/800px-Coconut.jpg"
-        "cotton" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Cotton_Plant.jpg/800px-Cotton_Plant.jpg"
-        "jute" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Corchorus_olitorius.jpg/800px-Corchorus_olitorius.jpg"
-        "coffee" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Roasted_coffee_beans.jpg/800px-Roasted_coffee_beans.jpg"
-        else -> "https://cdn.pixabay.com/photo/2016/11/19/15/40/agriculture-1840003_1280.jpg"
+        "rice" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Paddy_field_in_Sumbawa_Islands.jpg/1280px-Paddy_field_in_Sumbawa_Islands.jpg"
+        "maize" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Maize_field_in_summer.jpg/1280px-Maize_field_in_summer.jpg"
+        "chickpea" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Chickpea_field.jpg/1280px-Chickpea_field.jpg"
+        "kidneybeans" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Phaseolus_vulgaris_001.JPG/1280px-Phaseolus_vulgaris_001.JPG"
+        "pigeonpeas" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Cajanus_cajan_flowers.JPG/1280px-Cajanus_cajan_flowers.JPG"
+        "mothbeans" -> "https://res.cloudinary.com/dts788/image/upload/v1/crops/beans_field.jpg"
+        "mungbean" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Mung_bean_field.jpg/1280px-Mung_bean_field.jpg"
+        "blackgram" -> "https://res.cloudinary.com/dts788/image/upload/v1/crops/pulses_field.jpg"
+        "lentil" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Lentil_field_in_central_Anatolia.jpg/1280px-Lentil_field_in_central_Anatolia.jpg"
+        "pomegranate" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Pomegranate_tree_in_Ganja.jpg/1280px-Pomegranate_tree_in_Ganja.jpg"
+        "banana" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Banana_Plantation_in_Martinique.jpg/1280px-Banana_Plantation_in_Martinique.jpg"
+        "mango" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Mango_orchard_in_India.jpg/1280px-Mango_orchard_in_India.jpg"
+        "grapes" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Vineyard_in_Slovenia.jpg/1280px-Vineyard_in_Slovenia.jpg"
+        "watermelon" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Watermelon_farm_in_Turkey.jpg/1280px-Watermelon_farm_in_Turkey.jpg"
+        "muskmelon" -> "https://res.cloudinary.com/dts788/image/upload/v1/crops/melon_field.jpg"
+        "apple" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Apples_on_tree_in_orchard.jpg/1280px-Apples_on_tree_in_orchard.jpg"
+        "orange" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Orange_orchard_in_California.jpg/1280px-Orange_orchard_in_California.jpg"
+        "papaya" -> "https://res.cloudinary.com/dts788/image/upload/v1/crops/papaya_field.jpg"
+        "coconut" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Coconut_palms_in_India.jpg/1280px-Coconut_palms_in_India.jpg"
+        "cotton" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Cotton_field_in_India.jpg/1280px-Cotton_field_in_India.jpg"
+        "jute" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Jute_field_in_Bangladesh.jpg/1280px-Jute_field_in_Bangladesh.jpg"
+        "coffee" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Coffee_plantation_in_Brazil.jpg/1280px-Coffee_plantation_in_Brazil.jpg"
+        else -> "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Green_field_with_blue_sky.jpg/1280px-Green_field_with_blue_sky.jpg"
     }
 }
 
@@ -297,17 +278,27 @@ fun RecommendationResultCard(result: RecommendationResponse, navController: NavC
 
             // --- MAIN RECOMMENDATION ---
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    modifier = Modifier.size(110.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-                ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Surface(
+                        modifier = Modifier.size(110.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                    ) {
                     AsyncImage(
                         model = imageUrl,
                         contentDescription = cropName,
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
+                }
+                    
+                    // URL Debug Text
+                    Text(
+                        text = "Source: ${imageUrl.take(20)}...",
+                        style = androidx.compose.ui.text.TextStyle(fontSize = 7.sp),
+                        color = Color.Gray.copy(alpha = 0.4f),
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                 }
                 
@@ -323,9 +314,9 @@ fun RecommendationResultCard(result: RecommendationResponse, navController: NavC
                     )
                     Text(
                         cropName.uppercase(), 
-                        style = MaterialTheme.typography.headlineLarge, 
+                        style = MaterialTheme.typography.headlineMedium, 
                         fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = Color(0xFF1B5E20)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Surface(

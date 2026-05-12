@@ -295,146 +295,92 @@ fun FertilizerRecommendationScreen(navController: NavController, viewModel: Agro
                 item {
                     Spacer(modifier = Modifier.height(24.dp))
                     
-                    // --- PREMIUM DIAGNOSTIC DASHBOARD ---
+                    // --- PREMIUM FERTILIZER DASHBOARD ---
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp),
-                        shape = RoundedCornerShape(32.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAF8)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                        border = BorderStroke(1.dp, Color(0xFFE0E0E0))
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
+                        shape = RoundedCornerShape(28.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3E5F5)), // Premium Lavender
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                     ) {
                         Column(modifier = Modifier.padding(24.dp)) {
-                            // Diagnostic Header
+                            // Header
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Surface(
                                     shape = CircleShape,
-                                    color = Color(0xFF2E7D32),
-                                    modifier = Modifier.size(40.dp)
+                                    color = Color(0xFF4CAF50),
+                                    modifier = Modifier.size(32.dp)
                                 ) {
-                                    Icon(Icons.Default.AutoAwesome, null, tint = Color.White, modifier = Modifier.padding(10.dp))
+                                    Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.padding(6.dp))
                                 }
-                                Spacer(Modifier.width(12.dp))
-                                Column {
-                                    Text("AgroTeck Solution AI", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = Color(0xFF1B5E20))
-                                    Text("Premium Fertilizer Analysis Report", style = MaterialTheme.typography.labelSmall, color = Color(0xFF666666))
-                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    "AI Recommended Solution", 
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF4A148C)
+                                )
                             }
 
-                            Spacer(Modifier.height(24.dp))
-                            Divider(color = Color(0xFFEEEEEE), thickness = 1.dp)
-                            Spacer(Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                            // Main Recommendation
-                            Text("RECOMMENDED FERTILIZER", style = MaterialTheme.typography.labelLarge, color = Color(0xFF2E7D32), fontWeight = FontWeight.Bold)
+                            // Fertilizer Name
                             Text(
-                                text = fertResult!!.recommendation.uppercase(),
+                                text = fertResult!!.recommendation,
                                 style = MaterialTheme.typography.headlineLarge,
                                 fontWeight = FontWeight.Black,
-                                color = Color(0xFF212121)
+                                color = Color(0xFF4A148C)
                             )
-                            
-                            Surface(
-                                color = Color(0xFFE8F5E9),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.padding(top = 8.dp)
+                            Text(
+                                text = fertResult!!.details ?: "Optimal for your soil & crop",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // 1. Nutrient Deficiency Section
+                            Text(
+                                "Nutrient Deficiency (kg/ha)",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Row(Modifier.padding(horizontal = 10.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.Verified, null, tint = Color(0xFF2E7D32), modifier = Modifier.size(16.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text("Accuracy: ${fertResult!!.accuracy ?: "98.7%"}", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
-                                }
+                                val n = fertResult!!.deficiency?.get("N") ?: 0.0
+                                val p = fertResult!!.deficiency?.get("P") ?: 0.0
+                                val k = fertResult!!.deficiency?.get("K") ?: 0.0
+                                
+                                NutrientBadge("N", n, Color(0xFFE91E63), Modifier.weight(1f))
+                                NutrientBadge("P", p, Color(0xFFFF9800), Modifier.weight(1f))
+                                NutrientBadge("K", k, Color(0xFF2196F3), Modifier.weight(1f))
                             }
 
-                            Spacer(Modifier.height(32.dp))
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Divider(color = Color.Black.copy(alpha = 0.05f))
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                            // Nutrient Deficiency Section
-                            Text("Nutrient Gap Analysis (kg/ha)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(12.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                val deficiency = fertResult!!.deficiency ?: mapOf("N" to 0.0, "P" to 0.0, "K" to 0.0)
-                                listOf("N" to Color(0xFFFFEBEE), "P" to Color(0xFFFFF3E0), "K" to Color(0xFFE3F2FD)).forEach { (key, bgColor) ->
-                                    val textColor = when(key) { "N" -> Color(0xFFC62828); "P" -> Color(0xFFEF6C00); else -> Color(0xFF1565C0) }
-                                    Card(
-                                        modifier = Modifier.weight(1f),
-                                        colors = CardDefaults.cardColors(containerColor = bgColor),
-                                        shape = RoundedCornerShape(16.dp)
-                                    ) {
-                                        Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Text(key, fontWeight = FontWeight.Bold, color = textColor)
-                                            Text("${deficiency[key]?.toInt() ?: 0}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = textColor)
-                                        }
-                                    }
-                                }
-                            }
-
-                            Spacer(Modifier.height(32.dp))
-
-                            // AI Reasoning Section
-                            Text("Why this fertilizer? (AI Reasoning)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(12.dp))
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(Color(0xFFF1F8E9), RoundedCornerShape(16.dp))
-                                    .padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                fertResult!!.whyThisFertilizer?.forEach { item ->
-                                    val isPositive = item.impact > 0
-                                    Text(
-                                        text = item.feature,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = if (isPositive) Color(0xFF2E7D32) else Color(0xFFC62828),
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                } ?: Text("Calculating feature impacts...", color = Color.Gray)
-                            }
-
-                            Spacer(Modifier.height(32.dp))
-
-                            // EXPERT ANALYSIS CARD
-                            Surface(
-                                color = Color.White,
-                                shape = RoundedCornerShape(20.dp),
-                                border = BorderStroke(1.dp, Color(0xFFE8F5E9)),
-                                shadowElevation = 2.dp
-                            ) {
-                                Column(modifier = Modifier.padding(20.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Default.MenuBook, null, tint = Color(0xFF2E7D32), modifier = Modifier.size(22.dp))
-                                        Spacer(Modifier.width(10.dp))
-                                        Text("Scientific Agricultural Advice", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
-                                    }
-                                    Spacer(Modifier.height(16.dp))
-                                    Text(
-                                        text = fertResult!!.expertExplanation ?: "Consulting ICAR knowledge base...",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        lineHeight = 22.sp,
-                                        color = Color(0xFF424242)
-                                    )
-                                }
-                            }
+                            // 2. Application Schedule Timeline
+                            Text(
+                                "Application Schedule",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF4A148C)
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
                             
-                            Spacer(Modifier.height(32.dp))
-                            
-                            // Application Schedule
-                            Text("Recommended Application Schedule", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.height(12.dp))
-                            fertResult!!.schedule?.forEach { step ->
-                                Row(modifier = Modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Surface(shape = CircleShape, color = Color(0xFF2E7D32), modifier = Modifier.size(8.dp)) {}
-                                    Spacer(Modifier.width(12.dp))
-                                    Column {
-                                        Text(step.stage, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                        Text("${step.quantity} kg/ha", fontSize = 12.sp, color = Color.Gray)
-                                    }
-                                }
+                            fertResult!!.schedule?.forEachIndexed { index, item ->
+                                ScheduleRow(
+                                    stage = item.stage,
+                                    qty = item.quantity,
+                                    isLast = index == (fertResult!!.schedule?.size ?: 0) - 1
+                                )
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
@@ -488,21 +434,438 @@ fun ScheduleRow(stage: String, qty: Double, isLast: Boolean) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NDVIScreen(navController: NavController, @Suppress("UNUSED_PARAMETER") viewModel: AgroViewModel) {
-    val strings = LocalAppStrings.current
-    Scaffold(topBar = { TopAppBar(title = { Text(strings.ndviMap) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, null) } }) }) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(modifier = Modifier.fillMaxWidth().height(300.dp).background(Color.LightGray), contentAlignment = Alignment.Center) {
-                Text(strings.satelliteMap)
+fun NDVIScreen(navController: NavController, viewModel: AgroViewModel) {
+    val strings       = LocalAppStrings.current
+    val result        by viewModel.cropAnalysisResult.collectAsState()
+    val isLoading     by viewModel.isSatelliteLoading.collectAsState()
+    val errorMsg      by viewModel.errorState.collectAsState()
+    val context       = androidx.compose.ui.platform.LocalContext.current
+
+    // ── Input state ──────────────────────────────────────────────────────────
+    var latitude  by remember { mutableStateOf("") }
+    var longitude by remember { mutableStateOf("") }
+    var radius    by remember { mutableStateOf("500") }
+    var gpsStatus by remember { mutableStateOf("") }
+
+    // ── GPS auto-fill ─────────────────────────────────────────────────────────
+    fun fetchGps() {
+        gpsStatus = "Fetching GPS…"
+        try {
+            val lm = context.getSystemService(android.content.Context.LOCATION_SERVICE)
+                    as android.location.LocationManager
+            val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+                context, android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+            if (hasPermission) {
+                val loc = lm.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
+                    ?: lm.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
+                if (loc != null) {
+                    latitude  = "%.6f".format(loc.latitude)
+                    longitude = "%.6f".format(loc.longitude)
+                    gpsStatus = "✅ GPS location filled"
+                } else {
+                    gpsStatus = "⚠️ No GPS fix. Enter manually."
+                }
+            } else {
+                gpsStatus = "⚠️ Location permission not granted."
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("${strings.healthScore}: 0.82", fontWeight = FontWeight.Bold)
-                    Text("The crop in Zone A shows optimal chlorophyll levels. Zone B requires attention.")
+        } catch (e: Exception) {
+            gpsStatus = "⚠️ ${e.message}"
+        }
+    }
+
+    // ── Severity → color mapping ──────────────────────────────────────────────
+    fun severityColor(severity: String): Color = when {
+        severity.contains("Critical", true)       -> Color(0xFFE53935)
+        severity.contains("Moderate", true)       -> Color(0xFFFF6F00)
+        severity.contains("Low Activity", true)   -> Color(0xFFF9A825)
+        severity.contains("Optimal", true)        -> Color(0xFF2E7D32)
+        else                                      -> Color(0xFF546E7A)
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("🛰️ Satellite Crop Analysis", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, null)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF1B3A2D),
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .background(Color(0xFFF1F8F2))
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+
+            // ── INPUT CARD ────────────────────────────────────────────────────
+            item {
+                Card(
+                    shape     = RoundedCornerShape(20.dp),
+                    colors    = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                    modifier  = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+
+                        // Header
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color(0xFF1B3A2D),
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text("🛰️", fontSize = 20.sp)
+                                }
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    "Farm Location",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Text(
+                                    "Enter coordinates or use GPS",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+
+                        Spacer(Modifier.height(16.dp))
+
+                        // GPS Button
+                        OutlinedButton(
+                            onClick = { fetchGps() },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1B3A2D))
+                        ) {
+                            Icon(
+                                Icons.Default.MyLocation, null,
+                                tint = Color(0xFF1B3A2D),
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Auto-fill from GPS", color = Color(0xFF1B3A2D))
+                        }
+                        if (gpsStatus.isNotEmpty()) {
+                            Text(
+                                gpsStatus,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (gpsStatus.startsWith("✅")) Color(0xFF2E7D32) else Color(0xFFE53935),
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+
+                        Spacer(Modifier.height(16.dp))
+
+                        // Latitude + Longitude
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            OutlinedTextField(
+                                value = latitude,
+                                onValueChange = { latitude = it },
+                                label = { Text("Latitude") },
+                                placeholder = { Text("e.g. 28.6139") },
+                                leadingIcon = { Icon(Icons.Default.LocationOn, null, tint = Color(0xFF1B3A2D)) },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                                ),
+                                singleLine = true
+                            )
+                            OutlinedTextField(
+                                value = longitude,
+                                onValueChange = { longitude = it },
+                                label = { Text("Longitude") },
+                                placeholder = { Text("e.g. 77.209") },
+                                leadingIcon = { Icon(Icons.Default.LocationOn, null, tint = Color(0xFF1B3A2D)) },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                                ),
+                                singleLine = true
+                            )
+                        }
+
+                        Spacer(Modifier.height(12.dp))
+
+                        // Radius
+                        OutlinedTextField(
+                            value = radius,
+                            onValueChange = { radius = it },
+                            label = { Text("Analysis Radius (metres)") },
+                            placeholder = { Text("e.g. 500") },
+                            leadingIcon = { Icon(Icons.Default.Radar, null, tint = Color(0xFF1B3A2D)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                            ),
+                            supportingText = { Text("Min 100m • Max 50,000m • Typical farm: 300–1000m") },
+                            singleLine = true
+                        )
+
+                        Spacer(Modifier.height(20.dp))
+
+                        // Error banner
+                        errorMsg?.let { err ->
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color(0xFFFFEBEE),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Error, null, tint = Color(0xFFE53935), modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(err, color = Color(0xFFE53935), style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                            Spacer(Modifier.height(12.dp))
+                        }
+
+                        // Analyze Button
+                        Button(
+                            onClick = {
+                                val lat = latitude.toDoubleOrNull()
+                                val lon = longitude.toDoubleOrNull()
+                                val rad = radius.toDoubleOrNull()
+                                when {
+                                    lat == null || lon == null ->
+                                        android.widget.Toast.makeText(context, "Enter valid latitude and longitude", android.widget.Toast.LENGTH_SHORT).show()
+                                    rad == null || rad < 100 ->
+                                        android.widget.Toast.makeText(context, "Radius must be at least 100 metres", android.widget.Toast.LENGTH_SHORT).show()
+                                    else -> viewModel.analyzeCrop(lat, lon, rad)
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth().height(52.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            enabled = !isLoading,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B3A2D))
+                        ) {
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(22.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                                Spacer(Modifier.width(10.dp))
+                                Text("Contacting Satellite…", color = Color.White, fontWeight = FontWeight.Bold)
+                            } else {
+                                Text("🛰️  Analyze Crop Health", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            }
+                        }
+
+                        if (isLoading) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "⏳ Fetching Sentinel-2 satellite imagery… This may take 20–45 seconds.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF5D7A6A),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
                 }
             }
+
+            // ── RESULT CARD ───────────────────────────────────────────────────
+            result?.let { data ->
+                // ── 1. HEALTH SCORE HERO ──────────────────────────────────────
+                item {
+                    val sColor = severityColor(data.severity)
+                    Card(
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = sColor.copy(alpha = 0.08f)
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(2.dp, sColor.copy(alpha = 0.3f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(data.severity, fontSize = 28.sp, fontWeight = FontWeight.Black)
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                data.prediction,
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = sColor
+                            )
+                            Spacer(Modifier.height(16.dp))
+
+                            // Health score bar
+                            Text("Health Score", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
+                            Spacer(Modifier.height(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(18.dp)
+                                    .clip(RoundedCornerShape(9.dp))
+                                    .background(Color(0xFFE0E0E0))
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(fraction = (data.healthScore / 100.0).toFloat().coerceIn(0f, 1f))
+                                        .height(18.dp)
+                                        .clip(RoundedCornerShape(9.dp))
+                                        .background(
+                                            brush = Brush.horizontalGradient(
+                                                listOf(Color(0xFFE53935), Color(0xFFFFA000), sColor)
+                                            )
+                                        )
+                                )
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                "${data.healthScore}/100",
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 22.sp,
+                                color = sColor
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "AI Confidence: ${(data.confidence * 100).toInt()}%",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
+
+                // ── 2. NDVI STATS ─────────────────────────────────────────────
+                item {
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Text("📡 NDVI Satellite Data", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                            Text("Sentinel-2 L2A · ${data.ndviStats.pixelCount} valid pixels analysed", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                            Spacer(Modifier.height(16.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                NdviStatBox("Mean NDVI", "%.3f".format(data.ndviStats.meanNdvi), Color(0xFF1B3A2D), Modifier.weight(1f))
+                                NdviStatBox("Max NDVI",  "%.3f".format(data.ndviStats.maxNdvi),  Color(0xFF2E7D32), Modifier.weight(1f))
+                                NdviStatBox("Min NDVI",  "%.3f".format(data.ndviStats.minNdvi),  Color(0xFFBF360C), Modifier.weight(1f))
+                                NdviStatBox("Std Dev",   "%.3f".format(data.ndviStats.stdNdvi),  Color(0xFF6A1B9A), Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
+
+                // ── 3. RECOMMENDATIONS ────────────────────────────────────────
+                item {
+                    val rec = data.recommendation
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3FBF5)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Text("📋 Field Recommendations", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                            Spacer(Modifier.height(12.dp))
+
+                            // Irrigation badge
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (rec.irrigationNeeded) Color(0xFFE3F2FD) else Color(0xFFE8F5E9),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(if (rec.irrigationNeeded) "💧" else "✅", fontSize = 20.sp)
+                                    Spacer(Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            if (rec.irrigationNeeded) "Irrigation Required" else "No Irrigation Needed",
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (rec.irrigationNeeded) Color(0xFF0D47A1) else Color(0xFF1B5E20)
+                                        )
+                                        Text(rec.irrigationAction, style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
+                                    }
+                                }
+                            }
+
+                            Spacer(Modifier.height(12.dp))
+                            RecommendationRow("🌿 Nutrient Action", rec.nutrientAction)
+                            Spacer(Modifier.height(8.dp))
+                            RecommendationRow("🔍 Field Action", rec.fieldAction)
+                            Spacer(Modifier.height(8.dp))
+
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFFFFF3E0)
+                            ) {
+                                Row(modifier = Modifier.padding(10.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                    Text("🛰️", fontSize = 16.sp)
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        "Next satellite check recommended in ${rec.nextCheckDays} days",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFFE65100)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                item { Spacer(Modifier.height(32.dp)) }
+            }
         }
+    }
+}
+
+@Composable
+private fun NdviStatBox(label: String, value: String, color: Color, modifier: Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = color.copy(alpha = 0.08f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.2f))
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(value, fontWeight = FontWeight.Black, fontSize = 14.sp, color = color)
+            Spacer(Modifier.height(2.dp))
+            Text(label, fontSize = 9.sp, color = Color.Gray, textAlign = TextAlign.Center)
+        }
+    }
+}
+
+@Composable
+private fun RecommendationRow(title: String, body: String) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF1B3A2D))
+        Spacer(Modifier.height(2.dp))
+        Text(body, style = MaterialTheme.typography.bodySmall, color = Color.DarkGray, lineHeight = 18.sp)
     }
 }
 
@@ -510,48 +873,6 @@ fun NDVIScreen(navController: NavController, @Suppress("UNUSED_PARAMETER") viewM
 @Composable
 fun ProfileScreen(navController: NavController, viewModel: AgroViewModel) {
     val userState by viewModel.userState.collectAsState()
-    val strings = LocalAppStrings.current
-    var showLanguageDialog by remember { mutableStateOf(false) }
-
-    if (showLanguageDialog) {
-        AlertDialog(
-            onDismissRequest = { showLanguageDialog = false },
-            title = { Text(strings.languageSettings, fontWeight = FontWeight.Bold) },
-            text = {
-                Column {
-                    val languages = listOf("English" to "en", "Hindi" to "hi", "Punjabi" to "pa")
-                    languages.forEach { (name, code) ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { 
-                                    viewModel.setLanguage(code)
-                                    showLanguageDialog = false
-                                }
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = viewModel.selectedLanguage.collectAsState().value == code,
-                                onClick = { 
-                                    viewModel.setLanguage(code)
-                                    showLanguageDialog = false
-                                }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(name, style = MaterialTheme.typography.bodyLarge)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showLanguageDialog = false }) {
-                    Text("Close")
-                }
-            },
-            shape = RoundedCornerShape(24.dp)
-        )
-    }
 
     Scaffold { padding ->
         LazyColumn(
@@ -621,7 +942,7 @@ fun ProfileScreen(navController: NavController, viewModel: AgroViewModel) {
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     val strings = LocalAppStrings.current
-                    StatItem(strings.farmSize, userState?.farmSize ?: "12.5", strings.acres)
+                    StatItem(strings.farmSize, "12.5", strings.acres)
                     Box(modifier = Modifier.width(1.dp).height(30.dp).background(MaterialTheme.colorScheme.outlineVariant))
                     StatItem(strings.crops, "4", strings.types)
                     Box(modifier = Modifier.width(1.dp).height(30.dp).background(MaterialTheme.colorScheme.outlineVariant))
@@ -659,12 +980,7 @@ fun ProfileScreen(navController: NavController, viewModel: AgroViewModel) {
                 }
 
                 SettingsGroup(title = strings.preferences) {
-                    ProfileMenuItem(
-                        title = strings.languageSettings, 
-                        icon = Icons.Default.Language, 
-                        description = "Hindi, English, Punjabi",
-                        onClick = { showLanguageDialog = true }
-                    )
+                    ProfileMenuItem(title = strings.languageSettings, icon = Icons.Default.Language, description = "Hindi, English, Punjabi")
                     ProfileMenuItem(title = strings.notification, icon = Icons.Default.NotificationsActive, description = strings.weatherAlerts)
                 }
 
@@ -725,7 +1041,7 @@ fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
 }
 
 @Composable
-fun ProfileMenuItem(title: String, icon: ImageVector, description: String? = null, onClick: () -> Unit = {}) {
+fun ProfileMenuItem(title: String, icon: ImageVector, description: String? = null) {
     ListItem(
         headlineContent = { Text(title, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge) },
         supportingContent = if (description != null) { { Text(description, style = MaterialTheme.typography.bodySmall) } } else null,
@@ -742,7 +1058,7 @@ fun ProfileMenuItem(title: String, icon: ImageVector, description: String? = nul
         },
         trailingContent = { Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.outline) },
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        modifier = Modifier.clickable { onClick() }
+        modifier = Modifier.clickable { /* Action */ }
     )
 }
 
@@ -859,275 +1175,6 @@ fun CropInfoCard(crop: CropInfo) {
             Row { Icon(Icons.Default.CalendarMonth, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(8.dp)); Text("${strings.season} ${crop.season}", style = MaterialTheme.typography.bodySmall) }
             Spacer(modifier = Modifier.height(4.dp))
             Row { Icon(Icons.Default.Grass, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(8.dp)); Text("${strings.soil} ${crop.soilType}", style = MaterialTheme.typography.bodySmall) }
-        }
-    }
-}
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SmartIrrigationScreen(navController: NavController, viewModel: AgroViewModel) {
-    val iotState by viewModel.iotState.collectAsState()
-    val strings = LocalAppStrings.current
-    
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(strings.smartIrrigation, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, null)
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Alert Banner
-            when {
-                iotState?.decision == "START IRRIGATION" -> {
-                    Surface(
-                        color = Color(0xFFFFEBEE),
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Default.Warning, null, tint = Color.Red, modifier = Modifier.size(32.dp))
-                            Spacer(Modifier.width(16.dp))
-                            Column {
-                                Text("IRRIGATION ALERT", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = Color.Red)
-                                Text("Soil moisture is low. Start irrigation now!", style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
-                            }
-                        }
-                    }
-                }
-                iotState?.decision == "NO IRRIGATION" -> {
-                    Surface(
-                        color = Color(0xFFE8F5E9),
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF2E7D32), modifier = Modifier.size(32.dp))
-                            Spacer(Modifier.width(16.dp))
-                            Column {
-                                Text("SOIL HEALTH GOOD", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = Color(0xFF2E7D32))
-                                Text("Current moisture levels are optimal.", style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
-                            }
-                        }
-                    }
-                }
-                else -> {
-                    Surface(
-                        color = Color(0xFFFFF3E0),
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Default.HourglassEmpty, null, tint = Color(0xFFE65100), modifier = Modifier.size(32.dp))
-                            Spacer(Modifier.width(16.dp))
-                            Column {
-                                Text("WAITING FOR DATA", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = Color(0xFFE65100))
-                                Text("Sensor is connecting. Please wait...", style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Real-time Gauges
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                GaugeCard(
-                    label = strings.soilMoisture,
-                    value = iotState?.soil ?: 0.0,
-                    unit = "%",
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.weight(1f)
-                )
-                GaugeCard(
-                    label = "Temperature",
-                    value = iotState?.temp ?: 0.0,
-                    unit = "°C",
-                    color = Color(0xFFE64A19),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            // Decision Box
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("AI Decision Engine", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.weight(1f))
-                        // Connectivity Badge
-                        Surface(
-                            color = if (iotState?.soil != null) Color(0xFFE8F5E9) else Color(0xFFF5F5F5),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(
-                                text = if (iotState?.soil != null) "● ONLINE" else "○ OFFLINE",
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = if (iotState?.soil != null) Color(0xFF2E7D32) else Color.Gray
-                            )
-                        }
-                    }
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        text = iotState?.decision ?: "Waiting for data...",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = if (iotState?.decision == "START IRRIGATION") Color.Red else MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = run {
-                            val rawTs = iotState?.timestamp
-                            when {
-                                rawTs == null -> "Last Sync: Never"
-                                rawTs.contains("T") -> {
-                                    val timePart = rawTs.split("T").getOrNull(1)?.split(".")?.getOrNull(0) ?: "00:00:00"
-                                    "Last Sync: $timePart"
-                                }
-                                rawTs.contains(" ") -> {
-                                    val timePart = rawTs.split(" ").getOrNull(1)?.split(".")?.getOrNull(0) ?: "00:00:00"
-                                    "Last Sync: $timePart"
-                                }
-                                else -> "Last Sync: $rawTs"
-                            }
-                        },
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.Gray
-                    )
-                }
-            }
-            
-            Spacer(Modifier.height(24.dp))
-            
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Button(
-                    onClick = { viewModel.simulateSensorData(25.0, 30.0) },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                ) {
-                    Text("Simulate Low Soil")
-                }
-                Button(
-                    onClick = { viewModel.simulateSensorData(65.0, 28.0) },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
-                ) {
-                    Text("Simulate High Soil")
-                }
-            }
-            
-            Spacer(Modifier.height(24.dp))
-
-            // Historical Trends Section
-            Text(
-                text = "Historical Trends (Last 10 Polls)",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(12.dp))
-            
-            val history by viewModel.iotHistory.collectAsState()
-            val primaryColor = MaterialTheme.colorScheme.primary
-            
-            Card(
-                modifier = Modifier.fillMaxWidth().height(150.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxSize().padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    if (history.isEmpty()) {
-                        Text("No historical data yet...", color = Color.Gray, modifier = Modifier.align(Alignment.CenterVertically).fillMaxWidth(), textAlign = TextAlign.Center)
-                    } else {
-                        history.forEach { item: IotData ->
-                            val heightFactor = (item.soil ?: 0.0) / 100
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight(heightFactor.toFloat().coerceIn(0.1f, 1f))
-                                    .background(
-                                        if ((item.soil ?: 0.0) < 30) Color.Red.copy(alpha = 0.7f) 
-                                        else primaryColor.copy(alpha = 0.7f),
-                                        RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                                    )
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(24.dp))
-            
-            Button(
-                onClick = { /* Manual Pump Control */ },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text("Remote Control Pump (Manual)")
-            }
-        }
-    }
-}
-
-@Composable
-fun GaugeCard(label: String, value: Double, unit: String, color: Color, modifier: Modifier) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(label, style = MaterialTheme.typography.labelMedium, color = Color.Gray)
-            Spacer(Modifier.height(12.dp))
-            Box(contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(
-                    progress = (value / 100).toFloat(),
-                    modifier = Modifier.size(80.dp),
-                    color = color,
-                    strokeWidth = 8.dp,
-                    trackColor = color.copy(alpha = 0.1f)
-                )
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("${value.toInt()}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Text(unit, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                }
-            }
         }
     }
 }
