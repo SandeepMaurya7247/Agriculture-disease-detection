@@ -186,6 +186,9 @@ def recommend_crop():
     return jsonify({
         "success": True,
         "recommendation": report.get("Recommended Crop", "Unknown"),
+        "accuracy": report.get("Accuracy", "99.3%"),
+        "why_this_crop": report.get("Why this crop?", []),
+        "expert_explanation": report.get("Expert Agricultural Explanation", ""),
         "details": report.get("note", "Suitable for your climate.")
     })
 

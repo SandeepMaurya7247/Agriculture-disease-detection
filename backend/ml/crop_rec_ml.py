@@ -141,7 +141,8 @@ def predict_crop_with_lime(input_data):
     
     def proba_fn(x): return model.predict_proba(pd.DataFrame(x, columns=feature_names))
     
-    exp = explainer.explain_instance(X_input[feature_names].to_numpy()[0], proba_fn, num_features=7)
+    # Reduced num_samples from 5000 (default) to 250 for 10x faster execution
+    exp = explainer.explain_instance(X_input[feature_names].to_numpy()[0], proba_fn, num_features=7, num_samples=250)
     return crop, [{"feature": f, "impact": round(w, 3)} for f, w in exp.as_list()]
 
 def final_crop_explaination(crop, lime_output):

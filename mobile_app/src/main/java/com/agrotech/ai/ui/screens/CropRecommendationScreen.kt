@@ -225,28 +225,28 @@ fun CropRecommendationScreen(navController: NavController, viewModel: AgroViewMo
 fun getCropImageUrl(crop: String): String {
     val cleanCrop = crop.trim().lowercase()
     return when (cleanCrop) {
-        "rice" -> "https://cdn.pixabay.com/photo/2016/11/18/13/11/rice-1834366_1280.jpg"
-        "maize" -> "https://cdn.pixabay.com/photo/2017/07/31/04/11/corn-2556353_1280.jpg"
-        "chickpea" -> "https://cdn.pixabay.com/photo/2016/11/24/11/50/chickpeas-1856193_1280.jpg"
-        "kidneybeans" -> "https://cdn.pixabay.com/photo/2014/10/24/15/45/red-beans-501254_1280.jpg"
-        "pigeonpeas" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Pigeon_peas_at_market.jpg/300px-Pigeon_peas_at_market.jpg"
-        "mothbeans" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Moth_bean_vigna_aconitifolia.jpg/300px-Moth_bean_vigna_aconitifolia.jpg"
-        "mungbean" -> "https://cdn.pixabay.com/photo/2014/10/24/15/45/mung-beans-501253_1280.jpg"
-        "blackgram" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Vigna_mungo_seeds.jpg/300px-Vigna_mungo_seeds.jpg"
-        "lentil" -> "https://cdn.pixabay.com/photo/2017/12/28/17/37/lentils-3045711_1280.jpg"
-        "pomegranate" -> "https://cdn.pixabay.com/photo/2017/08/30/17/23/pomegranate-2697887_1280.jpg"
-        "banana" -> "https://cdn.pixabay.com/photo/2018/09/24/20/12/bananas-3700718_1280.jpg"
-        "mango" -> "https://cdn.pixabay.com/photo/2016/03/05/19/14/mango-1238332_1280.jpg"
-        "grapes" -> "https://cdn.pixabay.com/photo/2016/03/05/19/02/grapes-1238260_1280.jpg"
-        "watermelon" -> "https://cdn.pixabay.com/photo/2016/08/11/23/25/watermelon-1587213_1280.jpg"
-        "muskmelon" -> "https://cdn.pixabay.com/photo/2017/06/02/18/24/melon-2367015_1280.jpg"
-        "apple" -> "https://cdn.pixabay.com/photo/2016/01/19/17/41/apple-1149952_1280.jpg"
-        "orange" -> "https://cdn.pixabay.com/photo/2016/01/02/02/03/orange-1117628_1280.jpg"
-        "papaya" -> "https://cdn.pixabay.com/photo/2017/09/16/16/09/papaya-2755913_1280.jpg"
-        "coconut" -> "https://cdn.pixabay.com/photo/2016/03/05/19/02/coconut-1238255_1280.jpg"
-        "cotton" -> "https://cdn.pixabay.com/photo/2017/08/01/21/21/cotton-2568019_1280.jpg"
-        "jute" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Corchorus_olitorius.jpg/300px-Corchorus_olitorius.jpg"
-        "coffee" -> "https://cdn.pixabay.com/photo/2016/11/19/12/54/coffee-1838933_1280.jpg"
+        "rice" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Paddy_field_in_Sri_Lanka.jpg/800px-Paddy_field_in_Sri_Lanka.jpg"
+        "maize" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Corn_Field_in_the_Evening.jpg/800px-Corn_Field_in_the_Evening.jpg"
+        "chickpea" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Chickpea.jpg/800px-Chickpea.jpg"
+        "kidneybeans" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Kidney_beans_in_a_bowl.jpg/800px-Kidney_beans_in_a_bowl.jpg"
+        "pigeonpeas" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Pigeon_peas_at_market.jpg/800px-Pigeon_peas_at_market.jpg"
+        "mothbeans" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Moth_bean_vigna_aconitifolia.jpg/800px-Moth_bean_vigna_aconitifolia.jpg"
+        "mungbean" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Mung_beans.jpg/800px-Mung_beans.jpg"
+        "blackgram" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Vigna_mungo_seeds.jpg/800px-Vigna_mungo_seeds.jpg"
+        "lentil" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Lentils_in_a_bowl_2.jpg/800px-Lentils_in_a_bowl_2.jpg"
+        "pomegranate" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Pomegranates_%28Punica_granatum%29.jpg/800px-Pomegranates_%28Punica_granatum%29.jpg"
+        "banana" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Bananas.jpg/800px-Bananas.jpg"
+        "mango" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Mango_on_tree_in_Kerala.jpg/800px-Mango_on_tree_in_Kerala.jpg"
+        "grapes" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Grapes.jpg/800px-Grapes.jpg"
+        "watermelon" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Watermelons.jpg/800px-Watermelons.jpg"
+        "muskmelon" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Cantaloupe.jpg/800px-Cantaloupe.jpg"
+        "apple" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/800px-Red_Apple.jpg"
+        "orange" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Orange-Fruit-Pieces.jpg/800px-Orange-Fruit-Pieces.jpg"
+        "papaya" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Papaya_cross_section_BNC.jpg/800px-Papaya_cross_section_BNC.jpg"
+        "coconut" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Coconut.jpg/800px-Coconut.jpg"
+        "cotton" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Cotton_Plant.jpg/800px-Cotton_Plant.jpg"
+        "jute" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Corchorus_olitorius.jpg/800px-Corchorus_olitorius.jpg"
+        "coffee" -> "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Roasted_coffee_beans.jpg/800px-Roasted_coffee_beans.jpg"
         else -> "https://cdn.pixabay.com/photo/2016/11/19/15/40/agriculture-1840003_1280.jpg"
     }
 }
@@ -278,7 +278,7 @@ fun RecommendationResultCard(result: RecommendationResponse, navController: NavC
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
-                        "AgriTech Solution AI", 
+                        "AgroTech Solution AI", 
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.primary
