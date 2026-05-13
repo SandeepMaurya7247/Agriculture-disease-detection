@@ -19,7 +19,10 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
     val userState: StateFlow<User?> = _userState
 
     private val _cropRec = MutableStateFlow<RecommendationResponse?>(null)
-    val cropRec: StateFlow<RecommendationResponse?> = _cropRec
+    val cropRec: StateFlow<RecommendationResponse?> = _cropRec.asStateFlow()
+
+    private val _futureRecs = MutableStateFlow<Map<Int, RecommendationResponse>>(emptyMap())
+    val futureRecs: StateFlow<Map<Int, RecommendationResponse>> = _futureRecs.asStateFlow()
 
     private val _fertilizerRec = MutableStateFlow<RecommendationResponse?>(null)
     val fertilizerRec = _fertilizerRec.asStateFlow()
@@ -61,9 +64,24 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
     private val _pendingChatQuery = MutableStateFlow<String?>(null)
     val pendingChatQuery: StateFlow<String?> = _pendingChatQuery.asStateFlow()
 
-    // ── Notifications ──
+    // ── Notifications (Adopted from Remote) ──
     val notifications = com.agrotech.ai.data.local.NotificationManager.notifications
     val unreadNotificationsCount = com.agrotech.ai.data.local.NotificationManager.unreadCount
+
+    // ── Expert Learning Lessons (My Feature) ──
+    private val _lessons = MutableStateFlow<List<VideoLesson>>(
+        listOf(
+            VideoLesson(title = "Wheat Rust Management", expert = "Dr. S. K. Singh", duration = "12:45", crop = "Wheat"),
+            VideoLesson(title = "Drip Irrigation Benefits", expert = "Engr. Ramesh Pal", duration = "08:20", crop = "General"),
+            VideoLesson(title = "Organic Fertilizer Prep", expert = "Farmer Om Prakash", duration = "15:10", crop = "All Crops"),
+            VideoLesson(title = "Rice Pest Control", expert = "Dr. Anita Devi", duration = "10:30", crop = "Rice"),
+            VideoLesson(title = "Soil Health Testing", expert = "Dr. Vivek Mehra", duration = "14:00", crop = "General")
+        )
+    )
+    val lessons: StateFlow<List<VideoLesson>> = _lessons.asStateFlow()
+
+    private val _marketPrices = MutableStateFlow<List<MarketRecord>>(emptyList())
+    val marketPrices: StateFlow<List<MarketRecord>> = _marketPrices.asStateFlow()
 
     init {
         startIotPolling()
@@ -157,6 +175,38 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
             } finally {
                 _isRefreshing.value = false
             }
+        }
+    }
+
+    fun calculateFutureRecommendations(soilData: SoilData) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val recs = mutableMapOf<Int, RecommendationResponse>()
+            
+            // Current month (0)
+            getCropRecommendation(soilData)
+            
+            // Simulate +1 and +2 months
+            for (monthsAhead in 1..2) {
+                try {
+                    // Simple seasonal adjustment logic for demonstration
+                    // In a real app, this would use a weather forecast API
+                    val adjustedData = soilData.copy(
+                        humidity = (soilData.humidity + (monthsAhead * 5)).coerceIn(30f, 95f),
+                        rainfall = (soilData.rainfall + (monthsAhead * 20)).coerceIn(50f, 300f),
+                        temperature = (soilData.temperature + (monthsAhead * 1)).coerceIn(15f, 45f)
+                    )
+                    
+                    val response = repository.getCropRec(adjustedData)
+                    if (response.isSuccessful) {
+                        response.body()?.let { recs[monthsAhead] = it }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+            _futureRecs.value = recs
+            _isLoading.value = false
         }
     }
 
@@ -335,6 +385,55 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                 }
             } catch (e: Exception) {
                 _errorState.value = "Network Error: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    // ── Lessons Management (Adopted from My Feature) ──
+    fun addLesson(lesson: VideoLesson) {
+        _lessons.value = listOf(lesson) + _lessons.value
+        addNotification("New Video Uploaded", "${lesson.expert} uploaded: ${lesson.title}", "EXPERT_VIDEO")
+    }
+
+    fun approveLesson(lessonId: String) {
+        val current = _lessons.value.toMutableList()
+        val index = current.indexOfFirst { it.id == lessonId }
+        if (index != -1) {
+            val updated = current[index].copy(status = "APPROVED")
+            current[index] = updated
+            _lessons.value = current
+            
+            addNotification("Video Approved", "Your video '${updated.title}' has been approved by admin.", "EXPERT_VIDEO")
+        }
+    }
+
+    // ── Notifications Management (Bridging with Remote NotificationManager) ──
+    fun addNotification(title: String, message: String, type: String) {
+        com.agrotech.ai.data.local.NotificationManager.addNotification(
+            AppNotification(title = title, message = message, type = type)
+        )
+    }
+
+    fun markNotificationAsRead(id: String) {
+        com.agrotech.ai.data.local.NotificationManager.markAsRead(id)
+    }
+
+    fun fetchMarketPrices(state: String? = null, district: String? = null, commodity: String? = null) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                // Using the API key provided by the user
+                val apiKey = "579b464db66ec23bdd000001be6e10d971234dfe4304ab08fe8fdb69" 
+                val response = repository.getMarketPrices(apiKey, state, district, commodity)
+                if (response.isSuccessful) {
+                    _marketPrices.value = response.body()?.records ?: emptyList()
+                } else {
+                    _errorState.value = "Market Data Error: ${response.code()}"
+                }
+            } catch (e: Exception) {
+                _errorState.value = "Market Sync Error: ${e.message}"
             } finally {
                 _isLoading.value = false
             }

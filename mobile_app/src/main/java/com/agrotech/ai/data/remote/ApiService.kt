@@ -47,4 +47,14 @@ interface ApiService {
         @Query("k") k: Float,
         @Query("ph") ph: Float
     ): Response<RecommendationResponse>
+
+    @GET("https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070")
+    suspend fun getMarketPrices(
+        @Query("api-key") apiKey: String,
+        @Query("format") format: String = "json",
+        @Query("limit") limit: Int = 10,
+        @Query("filters[state]") state: String? = null,
+        @Query("filters[district]") district: String? = null,
+        @Query("filters[commodity]") commodity: String? = null
+    ): Response<MarketPriceResponse>
 }

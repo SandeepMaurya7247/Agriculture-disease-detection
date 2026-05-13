@@ -142,13 +142,57 @@ data class CropAnalysisResponse(
 )
 
 // ─────────────────────────────────────────────────────────────
-// 🔔 Notifications
+// 💸  Market Price Models
 // ─────────────────────────────────────────────────────────────
 
+data class MarketRecord(
+    val state: String,
+    val district: String,
+    val market: String,
+    val commodity: String,
+    val variety: String,
+    @SerializedName("arrival_date") val arrivalDate: String,
+    @SerializedName("min_price") val minPrice: String,
+    @SerializedName("max_price") val maxPrice: String,
+    @SerializedName("modal_price") val modalPrice: String
+)
+
+data class MarketPriceResponse(
+    val total: Int,
+    val count: Int,
+    val records: List<MarketRecord>
+)
+
+// ─────────────────────────────────────────────────────────────
+// 🎓  Expert Learning & Notifications
+// ─────────────────────────────────────────────────────────────
+
+data class VideoLesson(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val title: String,
+    val expert: String,
+    val duration: String,
+    val crop: String,
+    val status: String = "APPROVED", // "PENDING", "APPROVED"
+    val uploadedBy: String = "System",
+    val videoUri: String? = null
+)
+
+// 🔔 Remote Notifications Model
 data class NotificationItem(
     val id: String = java.util.UUID.randomUUID().toString(),
     val title: String,
     val message: String,
+    val timestamp: Long = System.currentTimeMillis(),
+    val isRead: Boolean = false
+)
+
+// 🔔 My Feature Notifications Model
+data class AppNotification(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val title: String,
+    val message: String,
+    val type: String, // "EXPERT_VIDEO", "WEATHER_ALERT", "IOT_ALERT"
     val timestamp: Long = System.currentTimeMillis(),
     val isRead: Boolean = false
 )

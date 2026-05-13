@@ -96,11 +96,11 @@ fun CropMenuScreen(navController: NavController) {
                         onClick = { navController.navigate(Screen.CropDetails.route) }
                     )
                     CategoryActionCard(
-                        title = strings.pestGuard,
-                        icon = Icons.Default.BugReport,
-                        color = Color(0xFFD32F2F),
+                        title = strings.marketPrice,
+                        icon = Icons.Default.CurrencyRupee,
+                        color = Color(0xFFFFA000),
                         modifier = Modifier.weight(1f),
-                        onClick = { navController.navigate(Screen.StressDetection.route) }
+                        onClick = { navController.navigate(Screen.MarketPrice.route) }
                     )
                 }
                 Row(
@@ -116,11 +116,11 @@ fun CropMenuScreen(navController: NavController) {
                         onClick = { navController.navigate(Screen.FertilizerRecommendation.route) }
                     )
                     CategoryActionCard(
-                        title = strings.marketPrice,
-                        icon = Icons.Default.TrendingUp,
+                        title = "Seasonal Planning",
+                        icon = Icons.Default.CalendarMonth,
                         color = Color(0xFF7B1FA2),
                         modifier = Modifier.weight(1f),
-                        onClick = { /* Navigate to Market Prices */ }
+                        onClick = { navController.navigate(Screen.SeasonalPlanner.route) }
                     )
                 }
             }

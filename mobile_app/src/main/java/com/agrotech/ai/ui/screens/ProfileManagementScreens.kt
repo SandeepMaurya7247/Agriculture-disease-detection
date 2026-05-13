@@ -1,6 +1,7 @@
 package com.agrotech.ai.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,6 +19,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.agrotech.ai.viewmodel.AgroViewModel
+import com.agrotech.ai.data.model.AppNotification
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -143,17 +151,11 @@ fun OverallHistoryScreen(navController: NavController) {
 
 data class HistoryEvent(val title: String, val desc: String, val time: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val color: Color)
 
-@OptIn(ExperimentalMaterial3Api::class)
-val GlobalNotifications = androidx.compose.runtime.mutableStateListOf(
-    NotificationItem("Weather Alert", "Heavy rain expected in your area tomorrow. Delay spraying fertilizers.", "2h ago", Icons.Default.Cloud, Color(0xFFF44336)),
-    NotificationItem("Application Reminder", "It's time to apply urea to your Main Wheat Field.", "5h ago", Icons.Default.CheckCircle, Color(0xFF4CAF50)),
-    NotificationItem("Market Update", "Wheat prices have increased by 5% in the local mandi.", "1d ago", Icons.Default.TrendingUp, Color(0xFF2196F3))
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationsScreen(navController: NavController) {
-    val notifications = GlobalNotifications
+fun NotificationsScreen(navController: NavController, viewModel: AgroViewModel) {
+    val notifications by viewModel.notifications.collectAsState()
 
     Scaffold(
         topBar = {
@@ -167,33 +169,25 @@ fun NotificationsScreen(navController: NavController) {
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(notifications) { notif ->
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Icon(notif.icon, null, tint = notif.color, modifier = Modifier.size(24.dp))
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(notif.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(notif.body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(notif.time, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                        }
+        if (notifications.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.NotificationsNone, null, modifier = Modifier.size(64.dp), tint = Color.Gray)
+                    Spacer(Modifier.height(16.dp))
+                    Text("No notifications yet", color = Color.Gray)
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(notifications) { notif ->
+                    NotificationCard(notif) {
+                        viewModel.markNotificationAsRead(notif.id)
                     }
                 }
             }
@@ -201,4 +195,56 @@ fun NotificationsScreen(navController: NavController) {
     }
 }
 
-data class NotificationItem(val title: String, val body: String, val time: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val color: Color)
+@Composable
+fun NotificationCard(notif: AppNotification, onClick: () -> Unit) {
+    val icon = when(notif.type) {
+        "EXPERT_VIDEO" -> Icons.Default.PlayCircle
+        "WEATHER_ALERT" -> Icons.Default.Cloud
+        "IOT_ALERT" -> Icons.Default.Warning
+        else -> Icons.Default.Notifications
+    }
+    val color = when(notif.type) {
+        "EXPERT_VIDEO" -> MaterialTheme.colorScheme.primary
+        "WEATHER_ALERT" -> Color(0xFFF44336)
+        "IOT_ALERT" -> Color(0xFFFF9800)
+        else -> Color.Gray
+    }
+    
+    val timeStr = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(notif.timestamp))
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (notif.isRead) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() }
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = color.copy(alpha = 0.1f),
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(icon, null, tint = color, modifier = Modifier.padding(8.dp))
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(notif.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                    if (!notif.isRead) {
+                        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(8.dp)) {}
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(notif.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(timeStr, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+            }
+        }
+    }
+}
+

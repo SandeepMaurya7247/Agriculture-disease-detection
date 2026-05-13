@@ -5,11 +5,21 @@ echo 🌱 Starting AgroTech AI System Setup...
 set "JAVA_HOME=C:\Program Files\Android\Android Studio\jbr"
 set "PATH=%JAVA_HOME%\bin;%PATH%"
 echo ☕ Using Java from: %JAVA_HOME%
+set "PYTHONUTF8=1"
 
-:: Stop any existing gradle daemons that might be using the wrong Java version
-call gradlew.bat --stop >nul 2>&1
+:: 1. Force release locks and clean build directory
+echo 🧹 Releasing file locks and cleaning build directory...
+taskkill /F /IM java.exe >nul 2>&1
+taskkill /F /IM adb.exe >nul 2>&1
 
-:: 1. Kill any existing backend on port 5000 ONLY (Safe for VS Code)
+if exist "mobile_app\build" (
+    mkdir _empty_tmp >nul 2>&1
+    robocopy _empty_tmp "mobile_app\build" /MIR >nul 2>&1
+    rmdir /s /q _empty_tmp >nul 2>&1
+    rmdir /s /q "mobile_app\build" >nul 2>&1
+)
+
+:: 2. Kill any existing backend on port 5000
 echo 🔍 Cleaning up previous backend instances on port 5000...
 FOR /F "tokens=5" %%T IN ('netstat -a -n -o ^| findstr :5000') DO (
     TaskKill.exe /PID %%T /F >nul 2>&1
@@ -22,11 +32,13 @@ netsh advfirewall firewall add rule name="AgroTech_Backend" dir=in action=allow 
 
 echo 🚀 Starting Backend Server (Flask) in background...
 adb reverse tcp:5000 tcp:5000
-start /b cmd /c "cd /d c:\MY_PROJECTS\AgroTech AI\backend && python main.py"
+start /b cmd /c "cd /d "%~dp0backend" && python main.py"
 
-:: 2. Build and Install Mobile App
+:: 3. Build and Install Mobile App
 echo 📱 Building and Installing Mobile App...
-cd /d "c:\MY_PROJECTS\AgroTech AI"
+cd /d "%~dp0"
+echo 🗑️ Uninstalling existing app to prevent signature conflicts...
+adb uninstall com.agrotech.ai >nul 2>&1
 call gradlew.bat :mobile_app:installDebug
 
 :: 3. Launch the Mobile App

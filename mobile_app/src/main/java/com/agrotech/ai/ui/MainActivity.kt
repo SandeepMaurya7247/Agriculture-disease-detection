@@ -150,6 +150,8 @@ fun AgroNavHost(viewModel: AgroViewModel) {
             composable(Screen.OverallHistory.route) { OverallHistoryScreen(navController) }
             composable(Screen.Notifications.route) { NotificationsScreen(navController, viewModel) }
             composable(Screen.FutureRecommendation.route) { FutureRecommendationScreen(navController, viewModel) }
+            composable(Screen.SeasonalPlanner.route) { SeasonalPlannerScreen(navController, viewModel) }
+            composable(Screen.MarketPrice.route) { MarketPriceScreen(navController, viewModel) }
         }
     }
 }

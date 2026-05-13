@@ -146,6 +146,7 @@ fun DashboardScreen(navController: NavController, viewModel: AgroViewModel) {
                                 modifier = Modifier
                                     .size(10.dp)
                                     .align(Alignment.TopEnd)
+                                    .offset(x = 2.dp, y = (-2).dp)
                             ) {}
                         }
                     }
@@ -313,6 +314,80 @@ fun DashboardScreen(navController: NavController, viewModel: AgroViewModel) {
                     result = analysisResult,
                     onClick = { navController.navigate(Screen.NDVIAnalysis.route) }
                 )
+            }
+
+            // 5. Seasonal Planning Tip
+            item {
+                SectionHeader(
+                    title = "Future Planning", 
+                    actionText = "Plan Now",
+                    onActionClick = { navController.navigate(Screen.SeasonalPlanner.route) }
+                )
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .clickable { navController.navigate(Screen.SeasonalPlanner.route) },
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(Icons.Default.EventNote, null, tint = Color.White, modifier = Modifier.padding(8.dp))
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text("1-2 Month Planning", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                            Text("Predict best crops for the upcoming season.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        }
+                    }
+                }
+            }
+
+            // 6. Market Price Search
+            item {
+                SectionHeader(
+                    title = strings.marketPrice, 
+                    actionText = strings.viewAll,
+                    onActionClick = { navController.navigate(Screen.MarketPrice.route) }
+                )
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .clickable { navController.navigate(Screen.MarketPrice.route) },
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1)), // Light Amber
+                    border = BorderStroke(1.dp, Color(0xFFFFD54F).copy(alpha = 0.3f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = Color(0xFFFFA000), // Amber
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(Icons.Default.CurrencyRupee, null, tint = Color.White, modifier = Modifier.padding(8.dp))
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text(strings.marketPrice, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                            Text("Check real-time government mandi prices.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        }
+                        Spacer(modifier = Modifier.weight(1f))
+                        Icon(Icons.Default.ArrowForwardIos, null, tint = Color.Gray, modifier = Modifier.size(16.dp))
+                    }
+                }
             }
 
             item { Spacer(modifier = Modifier.height(80.dp)) }

@@ -52,6 +52,7 @@ fun CropRecommendationScreen(navController: NavController, viewModel: AgroViewMo
     var ph by remember { mutableStateOf("") }
     var humidity by remember { mutableStateOf("") }
     var rainfall by remember { mutableStateOf("") }
+    var showFuturePlanning by remember { mutableStateOf(false) }
 
     val result by viewModel.cropRec.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -157,7 +158,23 @@ fun CropRecommendationScreen(navController: NavController, viewModel: AgroViewMo
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("Plan for Future", fontWeight = FontWeight.Bold)
+                            Text("Predict crops for 1-2 months later", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        }
+                        Switch(
+                            checked = showFuturePlanning,
+                            onCheckedChange = { showFuturePlanning = it },
+                            colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.primary)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
                         onClick = {
@@ -172,7 +189,11 @@ fun CropRecommendationScreen(navController: NavController, viewModel: AgroViewMo
                                 temperature = 25.0f,
                                 moisture = 20.0
                             )
-                            viewModel.getCropRecommendation(data)
+                            if (showFuturePlanning) {
+                                viewModel.calculateFutureRecommendations(data)
+                            } else {
+                                viewModel.getCropRecommendation(data)
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -186,7 +207,11 @@ fun CropRecommendationScreen(navController: NavController, viewModel: AgroViewMo
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.AutoAwesome, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(strings.getRecommendation, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                Text(
+                                    if (showFuturePlanning) "Analyze Future Seasons" else strings.getRecommendation, 
+                                    fontWeight = FontWeight.Bold, 
+                                    fontSize = 16.sp
+                                )
                             }
                         }
                     }
@@ -197,6 +222,12 @@ fun CropRecommendationScreen(navController: NavController, viewModel: AgroViewMo
                 item {
                     Spacer(modifier = Modifier.height(32.dp))
                     RecommendationResultCard(result!!, navController, viewModel)
+                }
+                
+                if (showFuturePlanning) {
+                    item {
+                        FuturePlanningSection(viewModel, navController)
+                    }
                 }
             }
         }
@@ -419,6 +450,62 @@ fun RecommendationResultCard(result: RecommendationResponse, navController: NavC
                     navController.navigate(Screen.Chatbot.route)
                 },
                 containerColor = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@Composable
+fun FuturePlanningSection(viewModel: AgroViewModel, navController: NavController) {
+    val futureRecs by viewModel.futureRecs.collectAsState()
+    
+    if (futureRecs.isNotEmpty()) {
+        Column(modifier = Modifier.padding(vertical = 16.dp)) {
+            Text(
+                "Future Predictions", 
+                style = MaterialTheme.typography.titleLarge, 
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                futureRecs.forEach { (months, res) ->
+                    FutureCropCard(months, res, modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FutureCropCard(months: Int, res: RecommendationResponse, modifier: Modifier) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+        modifier = modifier
+    ) {
+        Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Surface(
+                color = MaterialTheme.colorScheme.primary,
+                shape = CircleShape,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text("+$months", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text("In $months Month${if (months > 1) "s" else ""}", style = MaterialTheme.typography.labelSmall)
+            Text(res.recommendation.uppercase(), fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(8.dp))
+            AsyncImage(
+                model = getCropImageUrl(res.recommendation),
+                contentDescription = null,
+                modifier = Modifier.size(60.dp).clip(RoundedCornerShape(12.dp)),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop
             )
         }
     }

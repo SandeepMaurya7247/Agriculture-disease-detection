@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,33 +23,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.agrotech.ai.data.model.VideoLesson
 import com.agrotech.ai.viewmodel.AgroViewModel
-
-data class VideoLesson(
-    val id: String = java.util.UUID.randomUUID().toString(),
-    val title: String,
-    val expert: String,
-    val duration: String,
-    val crop: String,
-    val status: String = "APPROVED", // "PENDING", "APPROVED"
-    val uploadedBy: String = "System"
-)
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.platform.LocalContext
+import android.net.Uri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LearningScreen(navController: NavController, viewModel: AgroViewModel) {
     val userState by viewModel.userState.collectAsState()
     val isAdmin = userState?.email == "admin@agrotech.com"
+    val lessons by viewModel.lessons.collectAsState()
 
-    val lessons = remember { 
-        mutableStateListOf(
-            VideoLesson(title = "Wheat Rust Management", expert = "Dr. S. K. Singh", duration = "12:45", crop = "Wheat"),
-            VideoLesson(title = "Drip Irrigation Benefits", expert = "Engr. Ramesh Pal", duration = "08:20", crop = "General"),
-            VideoLesson(title = "Organic Fertilizer Prep", expert = "Farmer Om Prakash", duration = "15:10", crop = "All Crops"),
-            VideoLesson(title = "Rice Pest Control", expert = "Dr. Anita Devi", duration = "10:30", crop = "Rice"),
-            VideoLesson(title = "Soil Health Testing", expert = "Dr. Vivek Mehra", duration = "14:00", crop = "General")
-        )
-    }
+    var playingVideoUri by remember { mutableStateOf<String?>(null) }
 
     val videoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -60,9 +53,10 @@ fun LearningScreen(navController: NavController, viewModel: AgroViewModel) {
                 duration = "0:00",
                 crop = "General",
                 status = if (isAdmin) "APPROVED" else "PENDING",
-                uploadedBy = userState?.email ?: "user"
+                uploadedBy = userState?.email ?: "user",
+                videoUri = it.toString()
             )
-            lessons.add(0, newLesson)
+            viewModel.addLesson(newLesson)
         }
     }
 
@@ -101,26 +95,26 @@ fun LearningScreen(navController: NavController, viewModel: AgroViewModel) {
                     LessonItem(
                         lesson = lesson, 
                         isAdmin = isAdmin,
-                        onApprove = {
-                            val index = lessons.indexOfFirst { it.id == lesson.id }
-                            if (index != -1) {
-                                lessons[index] = lessons[index].copy(status = "APPROVED")
-                            }
-                        }
+                        onApprove = { viewModel.approveLesson(lesson.id) },
+                        onPlay = { playingVideoUri = lesson.videoUri }
                     )
                 }
             }
         }
     }
+
+    playingVideoUri?.let { uri ->
+        VideoPlayerDialog(videoUri = uri, onDismiss = { playingVideoUri = null })
+    }
 }
 
 @Composable
-fun LessonItem(lesson: VideoLesson, isAdmin: Boolean, onApprove: () -> Unit) {
+fun LessonItem(lesson: VideoLesson, isAdmin: Boolean, onApprove: () -> Unit, onPlay: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable { /* Play Video */ }
+            .clickable { if (lesson.status == "APPROVED") onPlay() }
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -168,6 +162,53 @@ fun LessonItem(lesson: VideoLesson, isAdmin: Boolean, onApprove: () -> Unit) {
                     modifier = Modifier.height(32.dp)
                 ) {
                     Text("Approve", fontSize = 12.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun VideoPlayerDialog(videoUri: String, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            setMediaItem(MediaItem.fromUri(Uri.parse(videoUri)))
+            prepare()
+            playWhenReady = true
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            exoPlayer.release()
+        }
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color.Black
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                AndroidView(
+                    factory = {
+                        PlayerView(context).apply {
+                            player = exoPlayer
+                            useController = true
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().aspectRatio(16/9f)
+                )
+                
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
                 }
             }
         }

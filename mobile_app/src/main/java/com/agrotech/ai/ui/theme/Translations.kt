@@ -89,7 +89,11 @@ data class AppStrings(
     val nutrients: String = "Nutrients:",
     val season: String = "Season:",
     val soil: String = "Soil:",
-    val smartIrrigation: String = "Smart Irrigation"
+    val smartIrrigation: String = "Smart Irrigation",
+    val seasonalPlanner: String = "Seasonal Planner",
+    val afterOneMonth: String = "After 1 Month",
+    val afterTwoMonth: String = "After 2 Months",
+    val planningReport: String = "Planning Report"
 )
 
 val EnglishStrings = AppStrings()
@@ -137,7 +141,11 @@ val HindiStrings = AppStrings(
     uploadPhoto = "बीमारियों या तनाव कारकों की पहचान करने के लिए प्रभावित फसल या पत्ती की फोटो अपलोड करें।",
     crops = "फसलें",
     viewAll = "सभी देखें",
-    smartIrrigation = "स्मार्ट सिंचाई"
+    smartIrrigation = "स्मार्ट सिंचाई",
+    seasonalPlanner = "सीजनल प्लानर",
+    afterOneMonth = "1 महीने बाद",
+    afterTwoMonth = "2 महीने बाद",
+    planningReport = "प्लानिंग रिपोर्ट"
 )
 
 val MarathiStrings = AppStrings(
