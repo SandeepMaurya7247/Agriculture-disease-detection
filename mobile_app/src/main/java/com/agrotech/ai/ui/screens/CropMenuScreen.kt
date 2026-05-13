@@ -35,7 +35,6 @@ import com.agrotech.ai.ui.theme.LocalAppStrings
 @Composable
 fun CropMenuScreen(navController: NavController) {
     val strings = LocalAppStrings.current
-    var searchQuery by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -43,29 +42,13 @@ fun CropMenuScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surface)
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
                 Text(
                     text = strings.cropManagement,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text(strings.searchCrops) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    leadingIcon = { Icon(Icons.Outlined.Search, null) },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-                    ),
-                    singleLine = true
                 )
             }
         }

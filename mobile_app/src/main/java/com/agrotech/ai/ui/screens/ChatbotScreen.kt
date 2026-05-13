@@ -190,7 +190,10 @@ fun ChatbotScreen(navController: NavController, viewModel: AgroViewModel) {
             Surface(
                 tonalElevation = 8.dp,
                 shadowElevation = 8.dp,
-                shape = RoundedCornerShape(24.dp, 24.dp, 0.dp, 0.dp)
+                shape = RoundedCornerShape(24.dp, 24.dp, 0.dp, 0.dp),
+                modifier = Modifier
+                    .imePadding()
+                    .navigationBarsPadding()
             ) {
                 Row(
                     modifier = Modifier

@@ -125,46 +125,62 @@ def signup():
 # ⛅ WEATHER MODULE
 # ----------------------------
 
-@app.route('/api/weather/current', methods=['GET'])
-def get_weather():
-    lat = request.args.get('lat', '28.6139')
-    lon = request.args.get('lon', '77.2090')
+def get_weather_data(lat='28.6139', lon='77.2090'):
     api_key = os.getenv("WEATHER_API_KEY")
-    
     if not api_key:
-        return jsonify({"error": "Weather API Key is missing in environment variables"}), 500
-        
-    url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}&units=metric"
+        return {"condition": "Unknown", "temperature": 0}
     
+    url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}&units=metric"
     try:
-        r = requests.get(url, timeout=10)
+        r = requests.get(url, timeout=5)
         if r.ok:
             data = r.json()
-            return jsonify({
+            return {
                 "temperature": data['main']['temp'],
                 "humidity": data['main']['humidity'],
                 "condition": data['weather'][0]['main'],
                 "windSpeed": data['wind']['speed'],
-                "iconUrl": f"https://openweathermap.org/img/wn/{data['weather'][0]['icon']}@2x.png",
-                "location": data.get('name', 'Bhopal'),
-                "pressure": data['main']['pressure'],
-                "description": data['weather'][0]['description']
-            })
-    except Exception as e:
-        print(f"Weather API Exception: {e}")
-    
-    # MOCK FALLBACK (Ensure app never shows error)
-    print("Using Mock Weather Fallback")
-    return jsonify({
-        "temperature": 28.5,
-        "humidity": 65,
-        "condition": "Cloudy",
-        "windSpeed": 4.2,
-        "iconUrl": "https://openweathermap.org/img/wn/03d@2x.png",
-        "location": "Bhopal (Demo)",
-        "pressure": 1012,
-        "description": "scattered clouds"
-    })
+                "location": data.get('name', 'Bhopal')
+            }
+    except:
+        pass
+    return {"condition": "Mock Rain", "temperature": 28.5} # Fallback for demo
+
+def send_alert(title, body):
+    # This will be replaced by Real FCM Logic
+    print(f"\n🔔 [NOTIFICATION ALERT] 🔔")
+    print(f"Title: {title}")
+    print(f"Body: {body}")
+    print(f"Time: {datetime.utcnow()}\n")
+
+def irrigation_decision(soil_moisture, temperature):
+    # Thresholds from user code
+    SOIL_DRY = 40
+    SOIL_WET = 70
+    HIGH_TEMP = 32
+
+    if soil_moisture < SOIL_DRY and temperature > HIGH_TEMP:
+        return "ON", "Soil is dry and temperature is high"
+    elif soil_moisture < SOIL_DRY:
+        return "ON", "Soil moisture is low"
+    elif soil_moisture > SOIL_WET:
+        return "OFF", "Soil has sufficient moisture"
+    else:
+        return "OFF", "Soil condition is normal"
+
+from notification_service import notifier
+
+def send_alert(title, body):
+    # Sends to 'all_farmers' topic so all app users get it
+    notifier.send_to_topic("all_farmers", title, body)
+    print(f"Time: {datetime.utcnow()}\n")
+
+@app.route('/api/weather/current', methods=['GET'])
+def get_weather():
+    lat = request.args.get('lat', '28.6139')
+    lon = request.args.get('lon', '77.2090')
+    data = get_weather_data(lat, lon)
+    return jsonify(data)
 
 # ----------------------------
 # 🔌 IOT MODULE (Sensor Data)
@@ -201,20 +217,21 @@ def iot_monitor():
     log_html = "".join([f"<li>[{d['timestamp']}] Soil: {d['soil']}% | Temp: {d['temp']}°C -> {d['decision']}</li>" for d in reversed(iot_history_log)])
     return f"""
     <html>
-        <head><title>IoT Traffic Monitor</title><meta http-equiv='refresh' content='2'></head>
+        <head><title>IoT Traffic Monitor</title><meta http-equiv='refresh' content='10'></head>
         <body style='font-family:sans-serif; padding:40px; background:#f4f4f9;'>
             <h1 style='color:#2e7d32;'>AgroTech AI - Live IoT Monitor</h1>
             <p>Last 50 sensor requests received by this server:</p>
             <div style='background:white; padding:20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);'>
                 <ul>{log_html or "<li>No data received yet. Connect your sensor to http://10.91.148.102:5000/api/iot</li>"}</ul>
             </div>
-            <p style='color:gray; font-size:12px;'>Page refreshes automatically every 2 seconds.</p>
+            <p style='color:gray; font-size:12px;'>Page refreshes automatically every 10 seconds.</p>
         </body>
     </html>
     """
 
-@app.route("/sensor-data", methods=["POST"])
-@app.route("/api/iot", methods=["POST", "GET"])
+@app.route("/sensor-data", methods=["POST"], strict_slashes=False)
+@app.route("/api/iot/data", methods=["POST"], strict_slashes=False)
+@app.route("/api/iot", methods=["POST", "GET"], strict_slashes=False)
 def receive_iot_data():
     global last_iot_data, iot_history_log
     try:
@@ -242,10 +259,19 @@ def receive_iot_data():
         # 3. Decision Logic
         if 0 < soil < 30:
             decision = "START IRRIGATION"
+            send_alert("Soil is Dry!", f"Moisture is {soil}%. Please turn on the motor.")
         elif soil == 0:
             decision = "Waiting for Sensor..."
         else:
             decision = "NO IRRIGATION"
+
+        # 4. Check Weather for Rain Alert
+        try:
+            weather_data = get_weather_data(28.6139, 77.2090) # Default coords, can be dynamic
+            if "Rain" in weather_data.get('condition', ''):
+                send_alert("Rain Alert!", "Rain is expected. You can stop manual irrigation.")
+        except:
+            pass
 
         # Update global state AFTER decision
         global last_iot_data
@@ -766,4 +792,4 @@ if __name__ == '__main__':
     print("AgroTech AI Cloud-Enabled Backend starting...")
     # Use the port assigned by Render, or 5000 for local testing
     port = int(os.environ.get("PORT", 5000))
-    app.run(debug=False, host='0.0.0.0', port=port)
+    app.run(debug=True, host='0.0.0.0', port=port)

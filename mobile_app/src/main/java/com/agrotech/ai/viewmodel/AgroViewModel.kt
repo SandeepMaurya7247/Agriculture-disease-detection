@@ -282,7 +282,7 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                 } catch (e: Exception) {
                     // Ignore errors during polling
                 }
-                delay(2000)
+                delay(10000)
             }
         }
     }
