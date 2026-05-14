@@ -279,7 +279,17 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                 if (base64Image != null) {
                     val response = repository.detectStress(base64Image, selectedLanguage.value)
                     if (response.isSuccessful) {
-                        _stressResult.value = response.body()
+                        val body = response.body()
+                        _stressResult.value = body
+                        body?.let {
+                            com.agrotech.ai.data.local.HistoryManager.addHistoryItem(
+                                HistoryItem(
+                                    type = "STRESS_DETECTION",
+                                    result = it.label,
+                                    details = "Confidence: ${it.confidence}%, Treatment: ${it.treatment}"
+                                )
+                            )
+                        }
                     } else {
                         _errorState.value = "AI Analysis Failed: ${response.code()}"
                     }
@@ -382,7 +392,17 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                 )
                 val response = repository.analyzeCrop(request)
                 if (response.isSuccessful) {
-                    _cropAnalysisResult.value = response.body()
+                    val body = response.body()
+                    _cropAnalysisResult.value = body
+                    body?.let {
+                        com.agrotech.ai.data.local.HistoryManager.addHistoryItem(
+                            HistoryItem(
+                                type = "SATELLITE_ANALYSIS",
+                                result = it.prediction,
+                                details = "Health Score: ${it.healthScore}, Severity: ${it.severity}"
+                            )
+                        )
+                    }
                 } else {
                     _errorState.value = "Satellite Service Error: ${response.code()}"
                 }
@@ -402,7 +422,17 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
             try {
                 val response = repository.getFutureRecommendation(lat, lon, days, selectedLanguage.value, n, p, k, ph)
                 if (response.isSuccessful) {
-                    _futureRec.value = response.body()
+                    val body = response.body()
+                    _futureRec.value = body
+                    body?.let {
+                        com.agrotech.ai.data.local.HistoryManager.addHistoryItem(
+                            HistoryItem(
+                                type = "FUTURE_REC",
+                                result = it.recommendation,
+                                details = "Planned for ${days} days ahead. N: $n, P: $p, K: $k"
+                            )
+                        )
+                    }
                 } else {
                     _errorState.value = "Future Sync Error: ${response.code()}"
                 }

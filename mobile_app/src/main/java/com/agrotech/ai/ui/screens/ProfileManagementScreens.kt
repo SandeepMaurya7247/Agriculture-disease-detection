@@ -133,6 +133,9 @@ fun OverallHistoryScreen(navController: NavController, viewModel: AgroViewModel)
                     val (title, icon, color) = when (item.type) {
                         "CROP_REC" -> Triple("Crop Recommendation", Icons.Default.Agriculture, Color(0xFF4CAF50))
                         "FERT_REC" -> Triple("Fertilizer Recommendation", Icons.Default.Science, Color(0xFF2196F3))
+                        "STRESS_DETECTION" -> Triple("Disease Detection", Icons.Default.CameraAlt, Color(0xFFE91E63))
+                        "SATELLITE_ANALYSIS" -> Triple("Satellite Health Scan", Icons.Default.Satellite, Color(0xFF673AB7))
+                        "FUTURE_REC" -> Triple("Future Planning", Icons.Default.Timeline, Color(0xFFFF9800))
                         else -> Triple("General History", Icons.Default.Event, Color.Gray)
                     }
 
