@@ -178,16 +178,7 @@ data class VideoLesson(
     val videoUri: String? = null
 )
 
-// 🔔 Remote Notifications Model
-data class NotificationItem(
-    val id: String = java.util.UUID.randomUUID().toString(),
-    val title: String,
-    val message: String,
-    val timestamp: Long = System.currentTimeMillis(),
-    val isRead: Boolean = false
-)
-
-// 🔔 My Feature Notifications Model
+// 🔔 Centralized Notification Model
 data class AppNotification(
     val id: String = java.util.UUID.randomUUID().toString(),
     val title: String,

@@ -7,9 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,7 +19,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.agrotech.ai.viewmodel.AgroViewModel
 import com.agrotech.ai.ui.theme.LocalAppStrings
-import com.agrotech.ai.data.model.NotificationItem
+import com.agrotech.ai.data.model.AppNotification
+import com.agrotech.ai.data.local.NotificationManager
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -33,7 +32,7 @@ fun NotificationsScreen(navController: NavController, viewModel: AgroViewModel) 
     
     // Mark all as read when screen is opened
     LaunchedEffect(Unit) {
-        com.agrotech.ai.data.local.NotificationManager.markAllAsRead()
+        NotificationManager.markAllAsRead()
     }
 
     Scaffold(
@@ -79,7 +78,9 @@ fun NotificationsScreen(navController: NavController, viewModel: AgroViewModel) 
                     .background(MaterialTheme.colorScheme.background)
             ) {
                 items(notifications) { notification ->
-                    NotificationCard(notification)
+                    NotificationCard(notification) {
+                        viewModel.markNotificationAsRead(notification.id)
+                    }
                 }
                 item { Spacer(modifier = Modifier.height(32.dp)) }
             }
@@ -88,9 +89,23 @@ fun NotificationsScreen(navController: NavController, viewModel: AgroViewModel) 
 }
 
 @Composable
-fun NotificationCard(notification: NotificationItem) {
+fun NotificationCard(notification: AppNotification, onClick: () -> Unit) {
     val sdf = SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault())
     val dateString = sdf.format(Date(notification.timestamp))
+
+    val icon = when(notification.type) {
+        "EXPERT_VIDEO" -> Icons.Default.PlayCircle
+        "WEATHER_ALERT" -> Icons.Default.Cloud
+        "IOT_ALERT" -> Icons.Default.Warning
+        else -> Icons.Default.Notifications
+    }
+    
+    val color = when(notification.type) {
+        "EXPERT_VIDEO" -> MaterialTheme.colorScheme.primary
+        "WEATHER_ALERT" -> Color(0xFFF44336)
+        "IOT_ALERT" -> Color(0xFFFF9800)
+        else -> Color.Gray
+    }
 
     Card(
         modifier = Modifier
@@ -108,16 +123,11 @@ fun NotificationCard(notification: NotificationItem) {
         ) {
             Surface(
                 shape = CircleShape,
-                color = if (notification.title.contains("Dry") || notification.title.contains("ON")) Color(0xFFD32F2F).copy(alpha = 0.1f) else Color(0xFF2E7D32).copy(alpha = 0.1f),
+                color = color.copy(alpha = 0.1f),
                 modifier = Modifier.size(40.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        if (notification.title.contains("Dry")) Icons.Default.NotificationsActive else Icons.Default.Notifications,
-                        null,
-                        tint = if (notification.title.contains("Dry")) Color(0xFFD32F2F) else Color(0xFF2E7D32),
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Icon(icon, null, tint = color, modifier = Modifier.size(20.dp))
                 }
             }
             Spacer(modifier = Modifier.width(16.dp))
