@@ -1,16 +1,19 @@
 package com.agrotech.ai.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.agrotech.ai.data.model.*
 import com.agrotech.ai.data.repository.AgroRepository
+import com.agrotech.ai.data.local.HistoryManager
+import com.agrotech.ai.data.local.NotificationManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
+class AgroViewModel(application: Application, private val repository: AgroRepository) : AndroidViewModel(application) {
 
     private val _weatherState = MutableStateFlow<WeatherData?>(null)
     val weatherState: StateFlow<WeatherData?> = _weatherState
@@ -64,11 +67,14 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
     private val _pendingChatQuery = MutableStateFlow<String?>(null)
     val pendingChatQuery: StateFlow<String?> = _pendingChatQuery.asStateFlow()
 
-    // ── Notifications (Adopted from Remote) ──
-    val notifications = com.agrotech.ai.data.local.NotificationManager.notifications
-    val unreadNotificationsCount = com.agrotech.ai.data.local.NotificationManager.unreadCount
+    // ── Notifications ──
+    val notifications = NotificationManager.notifications
+    val unreadNotificationsCount = NotificationManager.unreadCount
 
-    // ── Expert Learning Lessons (My Feature) ──
+    // ── History Tracking ──
+    val historyItems = HistoryManager.historyItems
+
+    // ── Expert Learning Lessons ──
     private val _lessons = MutableStateFlow<List<VideoLesson>>(
         listOf(
             VideoLesson(title = "Wheat Rust Management", expert = "Dr. S. K. Singh", duration = "12:45", crop = "Wheat"),
@@ -82,9 +88,6 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
 
     private val _marketPrices = MutableStateFlow<List<MarketRecord>>(emptyList())
     val marketPrices: StateFlow<List<MarketRecord>> = _marketPrices.asStateFlow()
-
-    // ── History Tracking ──
-    val historyItems = com.agrotech.ai.data.local.HistoryManager.historyItems
 
     init {
         startIotPolling()
@@ -101,34 +104,16 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
     fun login(email: String, pass: String, onResult: (String?) -> Unit) {
         viewModelScope.launch {
             _isLoading.value = true
-            
-            // LOCAL BYPASS for admin
-            if (email == "admin@agrotech.com" && pass == "123456") {
-                _userState.value = User("1", "Admin Farmer", email)
-                onResult(null)
-                _isLoading.value = false
-                return@launch
-            }
-
             try {
                 val response = repository.login(email, pass)
                 if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body?.success == true) {
-                        _userState.value = body.user
-                        onResult(null) // Success
-                    } else {
-                        onResult(body?.error ?: "Invalid credentials")
-                    }
-                } else {
-                    // Fallback for demo independence
-                    _userState.value = User("101", email.split("@")[0], email)
+                    _userState.value = response.body()?.user
                     onResult(null)
+                } else {
+                    onResult("Invalid credentials")
                 }
             } catch (e: Exception) {
-                // Connection error fallback: Allow login for demo
-                _userState.value = User("101", email.split("@")[0], email)
-                onResult(null)
+                onResult("Connection failed")
             }
             _isLoading.value = false
         }
@@ -140,22 +125,13 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
             try {
                 val response = repository.signup(name, email, pass)
                 if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body?.success == true) {
-                        _userState.value = body.user
-                        onResult(null) // Success
-                    } else {
-                        onResult(body?.error ?: "Registration failed")
-                    }
-                } else {
-                    // Fallback
-                    _userState.value = User("202", name, email)
+                    _userState.value = response.body()?.user
                     onResult(null)
+                } else {
+                    onResult("Registration failed")
                 }
             } catch (e: Exception) {
-                // Connection error fallback
-                _userState.value = User("202", name, email)
-                onResult(null)
+                onResult("Connection failed")
             }
             _isLoading.value = false
         }
@@ -163,20 +139,13 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
 
     fun fetchWeather(lat: Double, lon: Double) {
         viewModelScope.launch {
-            _isRefreshing.value = true
-            _errorState.value = null
             try {
                 val response = repository.getWeather(lat, lon)
                 if (response.isSuccessful) {
                     _weatherState.value = response.body()
-                } else {
-                    _errorState.value = "Failed to fetch weather: ${response.code()}"
                 }
             } catch (e: Exception) {
-                _errorState.value = "Weather Sync Error: ${e.message ?: "Connection lost"}"
                 e.printStackTrace()
-            } finally {
-                _isRefreshing.value = false
             }
         }
     }
@@ -185,18 +154,10 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             val recs = mutableMapOf<Int, RecommendationResponse>()
-            
-            // Current month (0)
-            getCropRecommendation(soilData)
-            
-            // Simulate +1 and +2 months
             for (monthsAhead in 1..2) {
                 try {
-                    // Simple seasonal adjustment logic for demonstration
-                    // In a real app, this would use a weather forecast API
                     val adjustedData = soilData.copy(
-                        humidity = (soilData.humidity + (monthsAhead * 5)).coerceIn(30f, 95f),
-                        rainfall = (soilData.rainfall + (monthsAhead * 20)).coerceIn(50f, 300f),
+                        nitrogen = (soilData.nitrogen + (monthsAhead * 5)).coerceIn(0f, 140f),
                         temperature = (soilData.temperature + (monthsAhead * 1)).coerceIn(15f, 45f)
                     )
                     
@@ -223,7 +184,8 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                     val body = response.body()
                     _cropRec.value = body
                     body?.let {
-                        com.agrotech.ai.data.local.HistoryManager.addHistoryItem(
+                        HistoryManager.addHistoryItem(
+                            getApplication(),
                             HistoryItem(
                                 type = "CROP_REC",
                                 result = it.recommendation,
@@ -243,7 +205,7 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             _errorState.value = null
-            _fertilizerRec.value = null // Clear old result
+            _fertilizerRec.value = null
             try {
                 val dataWithLang = data.copy(lang = selectedLanguage.value)
                 val response = repository.getFertilizerRec(dataWithLang)
@@ -251,7 +213,8 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                     val body = response.body()
                     _fertilizerRec.value = body
                     body?.let {
-                        com.agrotech.ai.data.local.HistoryManager.addHistoryItem(
+                        HistoryManager.addHistoryItem(
+                            getApplication(),
                             HistoryItem(
                                 type = "FERT_REC",
                                 result = it.recommendation,
@@ -274,7 +237,6 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Convert URI to Base64
                 val base64Image = convertUriToBase64(imageUri, context)
                 if (base64Image != null) {
                     val response = repository.detectStress(base64Image, selectedLanguage.value)
@@ -282,7 +244,8 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                         val body = response.body()
                         _stressResult.value = body
                         body?.let {
-                            com.agrotech.ai.data.local.HistoryManager.addHistoryItem(
+                            HistoryManager.addHistoryItem(
+                                getApplication(),
                                 HistoryItem(
                                     type = "STRESS_DETECTION",
                                     result = it.label,
@@ -319,22 +282,14 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
     }
 
     fun sendChatMessage(text: String, lang: String) {
-        println("DEBUG: sendChatMessage called with: $text")
         viewModelScope.launch {
             try {
                 val userMsg = ChatMessage(text, true)
                 _chatMessages.value = _chatMessages.value + userMsg
-                println("DEBUG: User message added to state")
-                
-                println("DEBUG: Calling repository.chat...")
                 val aiResponse = repository.chat(text, lang)
-                println("DEBUG: AI Response received: $aiResponse")
-                
                 val aiMsg = ChatMessage(aiResponse, false)
                 _chatMessages.value = _chatMessages.value + aiMsg
             } catch (e: Exception) {
-                println("DEBUG: Chat Error: ${e.message}")
-                e.printStackTrace()
                 _chatMessages.value = _chatMessages.value + ChatMessage("Connection Error: ${e.message}", false)
             }
         }
@@ -344,9 +299,7 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
         viewModelScope.launch {
             try {
                 repository.simulateIot(soil, temp)
-            } catch (e: Exception) {
-                // Ignore simulation errors
-            }
+            } catch (e: Exception) {}
         }
     }
 
@@ -358,10 +311,8 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                     if (response.isSuccessful) {
                         val newData = response.body()?.data
                         _iotState.value = newData
-                        
                         if (newData != null) {
                             val currentList = _iotHistory.value.toMutableList()
-                            // Only add if it's a new timestamp to avoid duplicates
                             if (currentList.isEmpty() || currentList.last().timestamp != newData.timestamp) {
                                 currentList.add(newData)
                                 if (currentList.size > 10) currentList.removeAt(0)
@@ -369,9 +320,7 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                             }
                         }
                     }
-                } catch (e: Exception) {
-                    // Ignore errors during polling
-                }
+                } catch (e: Exception) {}
                 delay(10000)
             }
         }
@@ -395,7 +344,8 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                     val body = response.body()
                     _cropAnalysisResult.value = body
                     body?.let {
-                        com.agrotech.ai.data.local.HistoryManager.addHistoryItem(
+                        HistoryManager.addHistoryItem(
+                            getApplication(),
                             HistoryItem(
                                 type = "SATELLITE_ANALYSIS",
                                 result = it.prediction,
@@ -425,7 +375,8 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                     val body = response.body()
                     _futureRec.value = body
                     body?.let {
-                        com.agrotech.ai.data.local.HistoryManager.addHistoryItem(
+                        HistoryManager.addHistoryItem(
+                            getApplication(),
                             HistoryItem(
                                 type = "FUTURE_REC",
                                 result = it.recommendation,
@@ -444,7 +395,6 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
         }
     }
 
-    // ── Lessons Management (Adopted from My Feature) ──
     fun addLesson(lesson: VideoLesson) {
         _lessons.value = listOf(lesson) + _lessons.value
         addNotification("New Video Uploaded", "${lesson.expert} uploaded: ${lesson.title}", "EXPERT_VIDEO")
@@ -457,27 +407,24 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
             val updated = current[index].copy(status = "APPROVED")
             current[index] = updated
             _lessons.value = current
-            
             addNotification("Video Approved", "Your video '${updated.title}' has been approved by admin.", "EXPERT_VIDEO")
         }
     }
 
-    // ── Notifications Management (Bridging with Remote NotificationManager) ──
     fun addNotification(title: String, message: String, type: String) {
-        com.agrotech.ai.data.local.NotificationManager.addNotification(
+        NotificationManager.addNotification(
             AppNotification(title = title, message = message, type = type)
         )
     }
 
     fun markNotificationAsRead(id: String) {
-        com.agrotech.ai.data.local.NotificationManager.markAsRead(id)
+        NotificationManager.markAsRead(id)
     }
 
     fun fetchMarketPrices(state: String? = null, district: String? = null, commodity: String? = null) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Using the API key provided by the user
                 val apiKey = "579b464db66ec23bdd000001be6e10d971234dfe4304ab08fe8fdb69" 
                 val response = repository.getMarketPrices(apiKey, state, district, commodity)
                 if (response.isSuccessful) {
@@ -486,7 +433,7 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                     _errorState.value = "Market Data Error: ${response.code()}"
                 }
             } catch (e: Exception) {
-                _errorState.value = "Market Sync Error: ${e.message}"
+                _errorState.value = "Connection Error: ${e.message}"
             } finally {
                 _isLoading.value = false
             }

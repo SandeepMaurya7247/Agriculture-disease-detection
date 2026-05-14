@@ -74,8 +74,9 @@ class MainActivity : ComponentActivity() {
         androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
         
         // Manual DI for simplicity in this example
+        com.agrotech.ai.data.local.HistoryManager.init(this)
         val repository = AgroRepository(RetrofitClient.apiService)
-        val viewModel = AgroViewModel(repository)
+        val viewModel = AgroViewModel(application, repository)
 
         setContent {
             val selectedLanguage by viewModel.selectedLanguage.collectAsState()
