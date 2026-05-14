@@ -83,6 +83,9 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
     private val _marketPrices = MutableStateFlow<List<MarketRecord>>(emptyList())
     val marketPrices: StateFlow<List<MarketRecord>> = _marketPrices.asStateFlow()
 
+    // ── History Tracking ──
+    val historyItems = com.agrotech.ai.data.local.HistoryManager.historyItems
+
     init {
         startIotPolling()
     }
@@ -217,7 +220,17 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                 val dataWithLang = soilData.copy(lang = selectedLanguage.value)
                 val response = repository.getCropRec(dataWithLang)
                 if (response.isSuccessful) {
-                    _cropRec.value = response.body()
+                    val body = response.body()
+                    _cropRec.value = body
+                    body?.let {
+                        com.agrotech.ai.data.local.HistoryManager.addHistoryItem(
+                            HistoryItem(
+                                type = "CROP_REC",
+                                result = it.recommendation,
+                                details = "N: ${soilData.nitrogen}, P: ${soilData.phosphorus}, K: ${soilData.potassium}"
+                            )
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -235,7 +248,17 @@ class AgroViewModel(private val repository: AgroRepository) : ViewModel() {
                 val dataWithLang = data.copy(lang = selectedLanguage.value)
                 val response = repository.getFertilizerRec(dataWithLang)
                 if (response.isSuccessful) {
-                    _fertilizerRec.value = response.body()
+                    val body = response.body()
+                    _fertilizerRec.value = body
+                    body?.let {
+                        com.agrotech.ai.data.local.HistoryManager.addHistoryItem(
+                            HistoryItem(
+                                type = "FERT_REC",
+                                result = it.recommendation,
+                                details = "Crop: ${data.cropType}, Soil: ${data.soilType}"
+                            )
+                        )
+                    }
                 } else {
                     _errorState.value = "Server Error: ${response.code()}"
                 }

@@ -196,3 +196,12 @@ data class AppNotification(
     val timestamp: Long = System.currentTimeMillis(),
     val isRead: Boolean = false
 )
+
+// 📋 History Tracking Model
+data class HistoryItem(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val type: String, // "CROP_REC", "FERT_REC"
+    val result: String,
+    val details: String,
+    val timestamp: Long = System.currentTimeMillis()
+)

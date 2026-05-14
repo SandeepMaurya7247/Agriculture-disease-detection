@@ -99,13 +99,8 @@ data class FarmPlot(val name: String, val size: String, val crop: String)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OverallHistoryScreen(navController: NavController) {
-    val historyItems = listOf(
-        HistoryEvent("Fertilizer Recommendation", "Recommended NPK for Wheat Field", "Today, 10:30 AM", Icons.Default.Science, Color(0xFF4CAF50)),
-        HistoryEvent("Disease Detection", "Scanned Leaf: Healthy", "Yesterday, 2:15 PM", Icons.Default.CameraAlt, Color(0xFF2196F3)),
-        HistoryEvent("Crop Added", "Added North Valley to profiles", "May 10, 2026", Icons.Default.AddCircle, Color(0xFFFF9800)),
-        HistoryEvent("NDVI Analysis", "Checked health score for Main Field", "May 08, 2026", Icons.Default.Map, Color(0xFF9C27B0))
-    )
+fun OverallHistoryScreen(navController: NavController, viewModel: AgroViewModel) {
+    val historyItems by viewModel.historyItems.collectAsState()
 
     Scaffold(
         topBar = {
@@ -119,29 +114,49 @@ fun OverallHistoryScreen(navController: NavController) {
             )
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            items(historyItems) { item ->
-                Row(modifier = Modifier.padding(bottom = 24.dp)) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Surface(
-                            shape = CircleShape,
-                            color = item.color.copy(alpha = 0.2f),
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(item.icon, null, tint = item.color, modifier = Modifier.padding(8.dp))
-                        }
-                        Box(modifier = Modifier.width(2.dp).height(40.dp).background(Color.LightGray.copy(alpha = 0.5f)).padding(top = 8.dp))
+        if (historyItems.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.History, null, modifier = Modifier.size(64.dp), tint = Color.Gray.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("No history found", color = Color.Gray)
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                items(historyItems) { item ->
+                    val (title, icon, color) = when (item.type) {
+                        "CROP_REC" -> Triple("Crop Recommendation", Icons.Default.Agriculture, Color(0xFF4CAF50))
+                        "FERT_REC" -> Triple("Fertilizer Recommendation", Icons.Default.Science, Color(0xFF2196F3))
+                        else -> Triple("General History", Icons.Default.Event, Color.Gray)
                     }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text(item.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                        Text(item.desc, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(item.time, style = MaterialTheme.typography.labelSmall, color = Color.Gray, modifier = Modifier.padding(top = 4.dp))
+
+                    Row(modifier = Modifier.padding(bottom = 24.dp)) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Surface(
+                                shape = CircleShape,
+                                color = color.copy(alpha = 0.2f),
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(icon, null, tint = color, modifier = Modifier.padding(8.dp))
+                            }
+                            Box(modifier = Modifier.width(2.dp).height(40.dp).background(Color.LightGray.copy(alpha = 0.5f)).padding(top = 8.dp))
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                            Text("Result: ${item.result}", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                            Text(item.details, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            
+                            val date = java.util.Date(item.timestamp)
+                            val format = java.text.SimpleDateFormat("dd MMM, hh:mm a", java.util.Locale.getDefault())
+                            Text(format.format(date), style = MaterialTheme.typography.labelSmall, color = Color.Gray, modifier = Modifier.padding(top = 4.dp))
+                        }
                     }
                 }
             }
