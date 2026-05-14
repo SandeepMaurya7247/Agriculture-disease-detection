@@ -1,0 +1,146 @@
+C:\Users\ASUS\AppData\Roaming\Python\Python314\site-packages\langgraph\checkpoint\serde\encrypted.py:5: LangChainPendingDeprecationWarning: The default value of `allowed_objects` will change in a future version. Pass an explicit value (e.g., allowed_objects='messages' or allowed_objects='core') to suppress this warning.
+  from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.189.210.102:5000
+Press CTRL+C to quit
+ * Restarting with stat
+C:\Users\ASUS\AppData\Roaming\Python\Python314\site-packages\langgraph\checkpoint\serde\encrypted.py:5: LangChainPendingDeprecationWarning: The default value of `allowed_objects` will change in a future version. Pass an explicit value (e.g., allowed_objects='messages' or allowed_objects='core') to suppress this warning.
+  from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+ * Debugger is active!
+ * Debugger PIN: 420-610-239
+10.189.210.232 - - [14/May/2026 06:46:16] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:46:26] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:46:36] "GET /api/iot/latest HTTP/1.1" 200 -
+C:\MY_PROJECTS\AgroTech AI\backend\main.py:339: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  threading.Thread(target=save_report, args=({"type": "crop_recommendation", "input": data, "result": {"crop": crop}, "timestamp": datetime.utcnow()},)).start()
+127.0.0.1 - - [14/May/2026 06:46:42] "POST /api/recommend/crop HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:46:46] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:46:57] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:47:07] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:47:17] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:47:27] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:47:37] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:47:47] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:47:57] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:48:07] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:48:17] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:48:27] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:48:38] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:48:48] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:48:58] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:49:09] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:49:19] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:49:29] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:49:39] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:49:49] "GET /api/iot/latest HTTP/1.1" 200 -
+C:\MY_PROJECTS\AgroTech AI\backend\main.py:339: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  threading.Thread(target=save_report, args=({"type": "crop_recommendation", "input": data, "result": {"crop": crop}, "timestamp": datetime.utcnow()},)).start()
+10.189.210.232 - - [14/May/2026 06:49:54] "POST /api/recommend/crop HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:49:59] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:50:09] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:50:14] "GET /api/weather/current?lat=23.2603021&lon=77.4354529 HTTP/1.1" 200 -
+C:\MY_PROJECTS\AgroTech AI\backend\main.py:339: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  threading.Thread(target=save_report, args=({"type": "crop_recommendation", "input": data, "result": {"crop": crop}, "timestamp": datetime.utcnow()},)).start()
+10.189.210.232 - - [14/May/2026 06:50:17] "POST /api/recommend/crop HTTP/1.1" 200 -
+C:\MY_PROJECTS\AgroTech AI\backend\main.py:339: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  threading.Thread(target=save_report, args=({"type": "crop_recommendation", "input": data, "result": {"crop": crop}, "timestamp": datetime.utcnow()},)).start()
+10.189.210.232 - - [14/May/2026 06:50:17] "POST /api/recommend/crop HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:50:19] "POST /api/recommend/crop HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:50:19] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:50:29] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:50:40] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:50:50] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:51:00] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:51:10] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:51:20] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:51:30] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:51:41] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:51:51] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:52:01] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:52:11] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:52:22] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:52:32] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:52:42] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:52:52] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:53:02] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:53:12] "GET /api/iot/latest HTTP/1.1" 200 -
+C:\MY_PROJECTS\AgroTech AI\backend\main.py:339: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  threading.Thread(target=save_report, args=({"type": "crop_recommendation", "input": data, "result": {"crop": crop}, "timestamp": datetime.utcnow()},)).start()
+127.0.0.1 - - [14/May/2026 06:53:13] "POST /api/recommend/crop HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:53:22] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:53:32] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:53:42] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:53:53] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:55:42] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:55:55] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:56:05] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:56:06] "GET /api/weather/current?lat=23.2603038&lon=77.4354185 HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:56:15] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:56:25] "GET /api/iot/latest HTTP/1.1" 200 -
+C:\MY_PROJECTS\AgroTech AI\backend\main.py:339: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  threading.Thread(target=save_report, args=({"type": "crop_recommendation", "input": data, "result": {"crop": crop}, "timestamp": datetime.utcnow()},)).start()
+10.189.210.232 - - [14/May/2026 06:56:30] "POST /api/recommend/crop HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:56:35] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:56:45] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:56:54] "GET /api/weather/current?lat=23.2603328&lon=77.43539 HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:56:55] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:57:06] "GET /api/iot/latest HTTP/1.1" 200 -
+C:\MY_PROJECTS\AgroTech AI\backend\main.py:339: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  threading.Thread(target=save_report, args=({"type": "crop_recommendation", "input": data, "result": {"crop": crop}, "timestamp": datetime.utcnow()},)).start()
+10.189.210.232 - - [14/May/2026 06:57:07] "POST /api/recommend/crop HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:57:07] "POST /api/recommend/crop HTTP/1.1" 200 -
+C:\MY_PROJECTS\AgroTech AI\backend\main.py:339: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  threading.Thread(target=save_report, args=({"type": "crop_recommendation", "input": data, "result": {"crop": crop}, "timestamp": datetime.utcnow()},)).start()
+10.189.210.232 - - [14/May/2026 06:57:09] "POST /api/recommend/crop HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:57:16] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:57:26] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:57:36] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:57:46] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:57:56] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:58:06] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:58:17] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:58:27] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:58:37] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:58:47] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:58:57] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:59:07] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:59:17] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:59:27] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:59:37] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:59:48] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 06:59:58] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 07:00:08] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 07:00:18] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 07:00:28] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 07:00:38] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 07:00:48] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 07:00:58] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 07:01:08] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 07:01:19] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 07:01:29] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 07:01:39] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 07:01:49] "GET /api/iot/latest HTTP/1.1" 200 -
+10.189.210.232 - - [14/May/2026 07:01:59] "GET /api/iot/latest HTTP/1.1" 200 -
+ * Detected change in 'C:\\MY_PROJECTS\\AgroTech AI\\backend\\main.py', reloading
+Exception in thread Thread-1 (serve_forever):
+Traceback (most recent call last):
+  File "C:\Python314\Lib\threading.py", line 1081, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Python314\Lib\threading.py", line 1023, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Roaming\Python\Python314\site-packages\werkzeug\serving.py", line 820, in serve_forever
+    super().serve_forever(poll_interval=poll_interval)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\socketserver.py", line 235, in serve_forever
+    ready = selector.select(poll_interval)
+  File "C:\Python314\Lib\selectors.py", line 314, in select
+    r, w, _ = self._select(self._readers, self._writers, [], timeout)
+              ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\selectors.py", line 305, in _select
+    r, w, x = select.select(r, w, w, timeout)
+              ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+OSError: [WinError 10038] An operation was attempted on something that is not a socket

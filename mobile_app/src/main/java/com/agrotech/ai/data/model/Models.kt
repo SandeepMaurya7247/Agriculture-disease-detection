@@ -99,15 +99,11 @@ data class IotResponse(
     val data: IotData
 )
 
-// ─────────────────────────────────────────────────────────────
-// 🛰️  Satellite / NDVI Analysis  (POST /api/analyze-crop)
-// ─────────────────────────────────────────────────────────────
-
+// Satellite Models
 data class CropAnalysisRequest(
     val latitude:    Double,
     val longitude:   Double,
-    val radius:      Double,           // metres
-    // Optional enrichment inputs (improves ML accuracy)
+    val radius:      Double,
     val temperature: Double? = null,
     val humidity:    Double? = null,
     val rainfall:    Double? = null,
@@ -132,18 +128,14 @@ data class CropHealthRecommendation(
 
 data class CropAnalysisResponse(
     val success:           Boolean,
-    val prediction:        String,           // e.g. "Healthy Vegetation"
+    val prediction:        String,
     val confidence:        Double,
-    val severity:          String,           // e.g. "🟢 Optimal"
-    @SerializedName("ndvi_health_score") val healthScore: Double,  // 0-100
+    val severity:          String,
+    @SerializedName("ndvi_health_score") val healthScore: Double,
     @SerializedName("ndvi_stats")        val ndviStats:   NdviStats,
     val recommendation:    CropHealthRecommendation,
     val error:             String? = null
 )
-
-// ─────────────────────────────────────────────────────────────
-// 💸  Market Price Models
-// ─────────────────────────────────────────────────────────────
 
 data class MarketRecord(
     val state: String,
@@ -163,22 +155,17 @@ data class MarketPriceResponse(
     val records: List<MarketRecord>
 )
 
-// ─────────────────────────────────────────────────────────────
-// 🎓  Expert Learning & Notifications
-// ─────────────────────────────────────────────────────────────
-
 data class VideoLesson(
     val id: String = java.util.UUID.randomUUID().toString(),
     val title: String,
     val expert: String,
     val duration: String,
     val crop: String,
-    val status: String = "APPROVED", // "PENDING", "APPROVED"
+    val status: String = "APPROVED",
     val uploadedBy: String = "System",
     val videoUri: String? = null
 )
 
-// 🔔 Remote Notifications Model
 data class NotificationItem(
     val id: String = java.util.UUID.randomUUID().toString(),
     val title: String,
@@ -187,12 +174,11 @@ data class NotificationItem(
     val isRead: Boolean = false
 )
 
-// 🔔 My Feature Notifications Model
 data class AppNotification(
     val id: String = java.util.UUID.randomUUID().toString(),
     val title: String,
     val message: String,
-    val type: String, // "EXPERT_VIDEO", "WEATHER_ALERT", "IOT_ALERT"
+    val type: String,
     val timestamp: Long = System.currentTimeMillis(),
     val isRead: Boolean = false
 )

@@ -93,7 +93,16 @@ data class AppStrings(
     val seasonalPlanner: String = "Seasonal Planner",
     val afterOneMonth: String = "After 1 Month",
     val afterTwoMonth: String = "After 2 Months",
-    val planningReport: String = "Planning Report"
+    val planningReport: String = "Planning Report",
+    val futurePlanning: String = "Future Planning",
+    val planningDesc: String = "Plan for the next 1-2 months based on your soil health.",
+    val soilNutrientsPlanning: String = "Soil Nutrients (for planning)",
+    val whenToSow: String = "When do you want to sow?",
+    val seeFuturePrediction: String = "See Future Prediction",
+    val predictedResults: String = "Predicted Results",
+    val inMonth: String = "In 1 Month",
+    val inMonths: String = "In %d Months",
+    val accuracy: String = "Accuracy"
 )
 
 val EnglishStrings = AppStrings()
@@ -145,7 +154,16 @@ val HindiStrings = AppStrings(
     seasonalPlanner = "सीजनल प्लानर",
     afterOneMonth = "1 महीने बाद",
     afterTwoMonth = "2 महीने बाद",
-    planningReport = "प्लानिंग रिपोर्ट"
+    planningReport = "प्लानिंग रिपोर्ट",
+    futurePlanning = "आने वाले समय की तैयारी",
+    planningDesc = "अपनी जमीन की मिट्टी के अनुसार अगले 1-2 महीनों की योजना बनाएं।",
+    soilNutrientsPlanning = "मिट्टी के पोषक तत्व (योजना के लिए)",
+    whenToSow = "आप कब फसल लगाना चाहते हैं?",
+    seeFuturePrediction = "भविष्य की भविष्यवाणी देखें",
+    predictedResults = "अनुमानित परिणाम",
+    inMonth = "1 महीने में",
+    inMonths = "%d महीनों में",
+    accuracy = "सटीकता"
 )
 
 val MarathiStrings = AppStrings(

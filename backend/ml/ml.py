@@ -325,8 +325,8 @@ def rag_explanation(fertilizer, lime_output, lang='en'):
     context = "\n".join(d.page_content for d in docs)
 
     prompt = f"""
-You are a Senior Agronomist and Fertilizer Specialist.
-Based on ICAR guidelines, explain why {fertilizer} is the absolute best choice for this field.
+You are a Senior Agronomist and Fertilizer Specialist with expert knowledge of ICAR and FAO standards.
+Explain in EXHAUSTIVE DETAIL why {fertilizer} is the absolute best choice for this field and how to use it for maximum yield.
 
 IMPORTANT: You MUST write the entire report in the following language: {lang}. 
 (If lang is 'hi', write in Hindi; if 'pa', write in Punjabi; otherwise English).
@@ -337,14 +337,27 @@ Context from Knowledge Base:
 Technical Reasoning (LIME Analysis):
 {lime_text}
 
-Provide a HIGHLY DETAILED report with these sections:
-1. 📊 **Nutrient Breakdown**: Why this specific ratio (N-P-K) is needed now.
-2. 🚜 **Application Method**: How and when to apply (Basal vs Top-dressing).
-3. 🧪 **Soil Health Impact**: How this fertilizer improves soil structure over time.
-4. 🌿 **Organic Synergy**: Natural supplements to use alongside this fertilizer.
-5. ⚠️ **Safety Precautions**: Handling and environmental safety tips.
+Provide a HIGHLY STRUCTURED and LONG report (minimum 1000 words) with these sections (Use Bold Headers):
 
-Format the output with professional headers and clear bullet points.
+1. 📊 **Nutrient Breakdown & Bio-availability**: 
+   Explain why this specific ratio (N-P-K) is exactly what the soil needs right now. Discuss how these nutrients will be absorbed by the {crop} roots.
+
+2. 🚜 **Advanced Application Method (Stage-wise)**: 
+   Provide a detailed schedule:
+   - **Basal Dose**: Quantity and method at sowing.
+   - **Top-dressing**: When to apply the next dose (e.g., 30 days after sowing).
+   - **Placement**: Broadcast vs Ring placement vs Foliar spray.
+
+3. 🧪 **Long-term Soil Health Impact**: 
+   How this {fertilizer} affects soil pH and microbial activity over the next 3 seasons.
+
+4. 🌿 **Organic Synergy & Integrated Nutrient Management (INM)**: 
+   What organic manures (Gobar khat, Vermicompost) should be added to boost the efficiency of this {fertilizer}.
+
+5. ⚠️ **Safety, Handling & Storage**: 
+   Environmental safety (preventing leaching) and handling tips for the farmer.
+
+Format: Use bullet points and professional headers. Make it feel like a personalized agronomy consultation.
 """
 
     return llm.invoke(prompt).content

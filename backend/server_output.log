@@ -1,0 +1,245 @@
+DEBUG: GROQ_API_KEY loaded: Yes
+DEBUG: TAVILY_API_KEY loaded: Yes
+DEBUG: WEATHER_API_KEY loaded: Yes
+INFO  [MongoDB]: Connected to Atlas successfully.
+Loading pre-trained model...
+Loading pre-trained Crop Model...
+[OK] Firebase Admin initialized successfully.
+AgroTech AI Cloud-Enabled Backend starting...
+ * Serving Flask app 'main'
+ * Debug mode: on
+DEBUG: GROQ_API_KEY loaded: Yes
+DEBUG: TAVILY_API_KEY loaded: Yes
+DEBUG: WEATHER_API_KEY loaded: Yes
+INFO  [MongoDB]: Connected to Atlas successfully.
+Loading pre-trained model...
+Loading pre-trained Crop Model...
+[OK] Firebase Admin initialized successfully.
+AgroTech AI Cloud-Enabled Backend starting...
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: [INCOMING] POST /api/recommend/crop from 127.0.0.1
+
+============================================================
+CROP REC REQUEST: N=80, P=40, K=40, T=25, H=70, pH=6.5, R=100
+[STEP 1] Running predict_crop_with_lime...
+[STEP 1 DONE] Crop=maize, LIME items=7, Time=0.0s
+[STEP 2] Running Groq AI explanation...
+[STEP 2 DONE] Expert len=2897, Time=2.0s
+[STEP 2 PREVIEW] **Agricultural Report: Maize Cultivation for Optimal Yield**
+
+**Introduction**
+
+Maize (Zea mays) is an ideal crop for the specified soil and climate conditions, considering its high adaptability and r...
+[RESPONSE] Keys=['success', 'recommendation', 'accuracy', 'why_this_crop', 'expert_explanation', 'details'], why_count=7, expert_len=2897
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: [INCOMING] POST /api/recommend/crop from 10.189.210.232
+
+============================================================
+CROP REC REQUEST: N=25.0, P=6.0, K=62.0, T=25.0, H=26.0, pH=26.0, R=34.0
+[STEP 1] Running predict_crop_with_lime...
+[STEP 1 DONE] Crop=chickpea, LIME items=7, Time=0.0s
+[STEP 2] Running Groq AI explanation...
+[STEP 2 DONE] Expert len=2913, Time=2.1s
+[STEP 2 PREVIEW] **Agricultural Report: Recommended Crop - Chickpea**
+
+**Introduction**
+
+Chickpea is an ideal crop for the specified soil and climate conditions, offering a high yield potential and excellent adaptabil...
+[RESPONSE] Keys=['success', 'recommendation', 'accuracy', 'why_this_crop', 'expert_explanation', 'details'], why_count=7, expert_len=2913
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: [INCOMING] GET /api/weather/current from 10.189.210.232
+DEBUG: [INCOMING] POST /api/recommend/crop from 10.189.210.232
+
+============================================================
+CROP REC REQUEST: N=80.0, P=40.0, K=40.0, T=26.0, H=75.0, pH=6.5, R=120.0
+[STEP 1] Running predict_crop_with_lime...
+DEBUG: [INCOMING] POST /api/recommend/crop from 10.189.210.232
+
+============================================================
+CROP REC REQUEST: N=80.0, P=40.0, K=40.0, T=25.0, H=70.0, pH=6.5, R=100.0
+[STEP 1] Running predict_crop_with_lime...
+[STEP 1 DONE] Crop=jute, LIME items=7, Time=0.1s
+[STEP 2] Running Groq AI explanation...
+[STEP 1 DONE] Crop=maize, LIME items=7, Time=0.1s
+[STEP 2] Running Groq AI explanation...
+[STEP 2 DONE] Expert len=3229, Time=1.8s
+[STEP 2 PREVIEW] **Agricultural Report: Jute Cultivation for Optimal Yield**
+
+**Introduction**
+
+Jute (Corchorus olitorius) is an excellent crop for cultivation in regions with specific soil and climate conditions, cha...
+[RESPONSE] Keys=['success', 'recommendation', 'accuracy', 'why_this_crop', 'expert_explanation', 'details'], why_count=7, expert_len=3229
+DEBUG: [INCOMING] POST /api/recommend/crop from 10.189.210.232
+
+============================================================
+CROP REC REQUEST: N=80.0, P=40.0, K=40.0, T=27.0, H=80.0, pH=6.5, R=140.0
+[STEP 1] Running predict_crop_with_lime...
+[STEP 1 DONE] Crop=jute, LIME items=7, Time=0.0s
+[STEP 2] Running Groq AI explanation...
+[STEP 2 DONE] Expert len=3242, Time=2.1s
+[STEP 2 PREVIEW] **Maize Crop Report: Optimizing Yield with Data-Driven Insights**
+
+**Introduction**
+
+Maize (Zea mays) is an ideal crop for the identified soil and climate conditions, characterized by moderate rainfal...
+[RESPONSE] Keys=['success', 'recommendation', 'accuracy', 'why_this_crop', 'expert_explanation', 'details'], why_count=7, expert_len=3242
+[STEP 2 DONE] Expert len=3094, Time=1.7s
+[STEP 2 PREVIEW] **Agricultural Report: Jute Cultivation for Optimized Yield**
+
+**Introduction**
+
+Jute (Corchorus olitorius) is an ideal crop for cultivation in regions with specific soil and climate conditions. The p...
+[RESPONSE] Keys=['success', 'recommendation', 'accuracy', 'why_this_crop', 'expert_explanation', 'details'], why_count=7, expert_len=3094
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: [INCOMING] POST /api/recommend/crop from 127.0.0.1
+
+============================================================
+CROP REC REQUEST: N=80, P=40, K=40, T=25, H=70, pH=6.5, R=100
+[STEP 1] Running predict_crop_with_lime...
+[STEP 1 DONE] Crop=maize, LIME items=7, Time=0.0s
+[STEP 2] Running Groq AI explanation...
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+[STEP 2 DONE] Expert len=3742, Time=2.1s
+[STEP 2 PREVIEW] **Maize Crop Report: Optimizing Yield in Favorable Soil and Climate Conditions**
+
+**Introduction**
+
+Maize (Zea mays) is an excellent crop choice for the specific soil and climate conditions described ...
+[RESPONSE] Keys=['success', 'recommendation', 'accuracy', 'why_this_crop', 'expert_explanation', 'details'], why_count=7, expert_len=3742
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: [INCOMING] GET /api/weather/current from 10.189.210.232
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: [INCOMING] POST /api/recommend/crop from 10.189.210.232
+
+============================================================
+CROP REC REQUEST: N=63.0, P=98.0, K=13.0, T=25.0, H=67.0, pH=5.0, R=59.0
+[STEP 1] Running predict_crop_with_lime...
+[STEP 1 DONE] Crop=maize, LIME items=7, Time=0.0s
+[STEP 2] Running Groq AI explanation...
+[STEP 2 DONE] Expert len=4089, Time=2.4s
+[STEP 2 PREVIEW] **Comprehensive Maize Crop Report: Optimizing Yield in Favorable Conditions**
+
+**Introduction**
+
+Maize (Zea mays) is a versatile and high-yielding crop that thrives in a broad range of climates and so...
+[RESPONSE] Keys=['success', 'recommendation', 'accuracy', 'why_this_crop', 'expert_explanation', 'details'], why_count=7, expert_len=4089
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: [INCOMING] GET /api/weather/current from 10.189.210.232
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: [INCOMING] POST /api/recommend/crop from 10.189.210.232
+
+============================================================
+CROP REC REQUEST: N=80.0, P=40.0, K=40.0, T=25.0, H=70.0, pH=6.5, R=100.0
+[STEP 1] Running predict_crop_with_lime...
+DEBUG: [INCOMING] POST /api/recommend/crop from 10.189.210.232
+
+============================================================
+CROP REC REQUEST: N=80.0, P=40.0, K=40.0, T=26.0, H=75.0, pH=6.5, R=120.0
+[STEP 1] Running predict_crop_with_lime...
+[STEP 1 DONE] Crop=maize, LIME items=7, Time=0.0s
+[STEP 2] Running Groq AI explanation...
+[STEP 1 DONE] Crop=jute, LIME items=7, Time=0.0s
+[STEP 2] Running Groq AI explanation...
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+[STEP 2 DONE] Expert len=4320, Time=2.3s
+[STEP 2 PREVIEW] **Agricultural Report: Maize Crop Optimization**
+
+**Introduction**
+
+Maize (Zea mays) is a versatile and widely cultivated crop, ideal for regions with specific soil and climate conditions. Based on th...
+[RESPONSE] Keys=['success', 'recommendation', 'accuracy', 'why_this_crop', 'expert_explanation', 'details'], why_count=7, expert_len=4320
+[STEP 2 DONE] Expert len=3298, Time=2.3s
+[STEP 2 PREVIEW] **Agricultural Report: Jute Cultivation in Optimized Conditions**
+
+**Introduction**
+
+After analyzing the provided data-driven context, our team of experts recommends jute (Corchorus olitorius) as the ...
+[RESPONSE] Keys=['success', 'recommendation', 'accuracy', 'why_this_crop', 'expert_explanation', 'details'], why_count=7, expert_len=3298
+DEBUG: [INCOMING] POST /api/recommend/crop from 10.189.210.232
+
+============================================================
+CROP REC REQUEST: N=80.0, P=40.0, K=40.0, T=27.0, H=80.0, pH=6.5, R=140.0
+[STEP 1] Running predict_crop_with_lime...
+[STEP 1 DONE] Crop=jute, LIME items=7, Time=0.0s
+[STEP 2] Running Groq AI explanation...
+[STEP 2 DONE] Expert len=4073, Time=1.7s
+[STEP 2 PREVIEW] **High-Yield Jute Crop Report**
+
+**Introduction**
+
+ Congratulations on choosing jute as your recommended crop! Based on the provided data-driven context, our expert analysis reveals that jute is an id...
+[RESPONSE] Keys=['success', 'recommendation', 'accuracy', 'why_this_crop', 'expert_explanation', 'details'], why_count=7, expert_len=4073
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}
+DEBUG: Mobile App Polling -> Current State: {'status': 'No data yet', 'timestamp': None}

@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.agrotech.ai.viewmodel.AgroViewModel
 import com.agrotech.ai.ui.theme.LocalAppStrings
-import com.agrotech.ai.data.model.NotificationItem
+import com.agrotech.ai.data.model.AppNotification
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -88,7 +88,7 @@ fun NotificationsScreen(navController: NavController, viewModel: AgroViewModel) 
 }
 
 @Composable
-fun NotificationCard(notification: NotificationItem) {
+fun NotificationCard(notification: AppNotification) {
     val sdf = SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault())
     val dateString = sdf.format(Date(notification.timestamp))
 
@@ -108,14 +108,14 @@ fun NotificationCard(notification: NotificationItem) {
         ) {
             Surface(
                 shape = CircleShape,
-                color = if (notification.title.contains("Dry") || notification.title.contains("ON")) Color(0xFFD32F2F).copy(alpha = 0.1f) else Color(0xFF2E7D32).copy(alpha = 0.1f),
+                color = if (notification.type == "IOT_ALERT" || notification.title.contains("Dry")) Color(0xFFD32F2F).copy(alpha = 0.1f) else Color(0xFF2E7D32).copy(alpha = 0.1f),
                 modifier = Modifier.size(40.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        if (notification.title.contains("Dry")) Icons.Default.NotificationsActive else Icons.Default.Notifications,
+                        if (notification.type == "IOT_ALERT") Icons.Default.NotificationsActive else Icons.Default.Notifications,
                         null,
-                        tint = if (notification.title.contains("Dry")) Color(0xFFD32F2F) else Color(0xFF2E7D32),
+                        tint = if (notification.type == "IOT_ALERT") Color(0xFFD32F2F) else Color(0xFF2E7D32),
                         modifier = Modifier.size(20.dp)
                     )
                 }

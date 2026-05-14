@@ -308,6 +308,7 @@ def receive_iot_data():
 
 @app.route('/api/recommend/crop', methods=['POST'])
 def recommend_crop():
+    import time
     data = request.json
     n = data.get('n', 0)
     p = data.get('p', 0)
@@ -318,27 +319,41 @@ def recommend_crop():
     rainfall = data.get('rainfall', 100.0)
     lang = data.get('lang', 'en')
     
-    # Use real ML model
-    report = crop_ml.generate_crop_report(n, p, k, temp, humidity, ph, rainfall, lang=lang)
+    print(f"\n{'='*60}")
+    print(f"CROP REC REQUEST: N={n}, P={p}, K={k}, T={temp}, H={humidity}, pH={ph}, R={rainfall}")
     
-    # Save to MongoDB in Background
-    import threading
-    threading.Thread(target=save_report, args=({
-        "type": "crop_recommendation",
-        "input": data,
-        "result": report,
-        "timestamp": datetime.utcnow()
-    },)).start()
-    
-    # Standardize response key
-    return jsonify({
-        "success": True,
-        "recommendation": report.get("Recommended Crop", "Unknown"),
-        "accuracy": report.get("Accuracy", "99.3%"),
-        "why_this_crop": report.get("Why this crop?", []),
-        "expert_explanation": report.get("Expert Agricultural Explanation", ""),
-        "details": report.get("note", "Suitable for your climate.")
-    })
+    try:
+        t1 = time.time()
+        print(f"[STEP 1] Running predict_crop_with_lime...")
+        input_data = {"N": n, "P": p, "K": k, "temperature": temp, "humidity": humidity, "ph": ph, "rainfall": rainfall}
+        crop, lime_output = crop_ml.predict_crop_with_lime(input_data)
+        t2 = time.time()
+        print(f"[STEP 1 DONE] Crop={crop}, LIME items={len(lime_output)}, Time={t2-t1:.1f}s")
+        
+        print(f"[STEP 2] Running Groq AI explanation...")
+        expert_explanation = crop_ml.final_crop_explaination(crop, lime_output, lang=lang)
+        t3 = time.time()
+        print(f"[STEP 2 DONE] Expert len={len(str(expert_explanation))}, Time={t3-t2:.1f}s")
+        print(f"[STEP 2 PREVIEW] {str(expert_explanation)[:200]}...")
+        
+        threading.Thread(target=save_report, args=({"type": "crop_recommendation", "input": data, "result": {"crop": crop}, "timestamp": datetime.utcnow()},)).start()
+        
+        response = {
+            "success": True,
+            "recommendation": crop,
+            "accuracy": "99.3%",
+            "why_this_crop": lime_output,
+            "expert_explanation": expert_explanation,
+            "details": f"{crop} is highly recommended for these conditions."
+        }
+        print(f"[RESPONSE] Keys={list(response.keys())}, why_count={len(lime_output)}, expert_len={len(str(expert_explanation))}")
+        return jsonify(response)
+        
+    except Exception as e:
+        import traceback
+        print(f"[CROP REC ERROR] {e}")
+        traceback.print_exc()
+        return jsonify({"success": True, "recommendation": "Error", "accuracy": "0%", "why_this_crop": [], "expert_explanation": f"Error: {str(e)}", "details": str(e)})
 
 # ----------------------------
 # 🧪 FERTILIZER RECOMMENDATION (ML + MongoDB)
@@ -455,31 +470,26 @@ def recommend_future_crop():
             avg_hum = np.mean([d["humidity"] for d in final_weather])
             avg_rain = np.mean([d.get("rain", 0) for d in final_weather])
             
-            # 4. Call Crop Recommendation ML
-            report = crop_ml.generate_crop_report(
-                n=user_n, p=user_p, k=user_k, 
-                temp=avg_temp, 
-                humidity=avg_hum, 
-                ph=user_ph, 
-                rainfall=avg_rain * days,
-                lang=lang
-            )
+            # 4. Call Crop Recommendation ML (same pipeline as crop rec)
+            import time
+            t1 = time.time()
+            print(f"[FUTURE] Running LIME + AI for future recommendation...")
+            input_data = {"N": user_n, "P": user_p, "K": user_k, "temperature": avg_temp, "humidity": avg_hum, "ph": user_ph, "rainfall": avg_rain * days}
+            crop, lime_output = crop_ml.predict_crop_with_lime(input_data)
+            t2 = time.time()
+            print(f"[FUTURE] Crop={crop}, LIME items={len(lime_output)}, Time={t2-t1:.1f}s")
             
-            # Format reasons as strings to match mobile model List<String>
-            raw_reasons = report.get("Why this crop?", [])
-            formatted_reasons = []
-            for r in raw_reasons:
-                feature = r.get("feature", "Factor")
-                impact = r.get("impact", 0)
-                emoji = "✅" if impact > 0 else "⚠️"
-                formatted_reasons.append(f"{emoji} {feature.capitalize()} (impact: {impact})")
+            expert_explanation = crop_ml.final_crop_explaination(crop, lime_output, lang=lang)
+            t3 = time.time()
+            print(f"[FUTURE] Expert len={len(str(expert_explanation))}, Time={t3-t2:.1f}s")
 
             return jsonify({
                 "success": True,
-                "recommendation": report.get("Recommended Crop", "Unknown"),
-                "accuracy": report.get("Accuracy", "99.1% (Estimated)"),
-                "reasons": formatted_reasons,
-                "expert_explanation": report.get("Expert Agricultural Explanation", ""),
+                "recommendation": crop,
+                "accuracy": "99.3% (Estimated)",
+                "why_this_crop": lime_output,
+                "expert_explanation": expert_explanation,
+                "reasons": [f"{item['feature']} (impact: {item['impact']})" for item in lime_output],
                 "weather_summary": {
                     "avg_temp": float(avg_temp),
                     "avg_humidity": float(avg_hum),

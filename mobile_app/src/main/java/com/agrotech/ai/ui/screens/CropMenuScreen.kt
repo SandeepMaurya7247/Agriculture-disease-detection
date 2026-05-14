@@ -69,16 +69,7 @@ fun CropMenuScreen(navController: NavController) {
                 )
             }
 
-            // Future Planning Section
-            item {
-                FeaturedActionCard(
-                    title = "Future Crop Planning",
-                    description = "Predict best crops for the next season using AI market trends and weather forecasts.",
-                    icon = Icons.Default.Timeline,
-                    color = Color(0xFF1565C0), // Deep Blue for Planning
-                    onClick = { navController.navigate(Screen.FutureRecommendation.route) }
-                )
-            }
+
 
             // 2. Services Grid
             item {

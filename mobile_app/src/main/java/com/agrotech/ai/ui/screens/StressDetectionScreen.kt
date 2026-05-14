@@ -104,7 +104,6 @@ fun StressDetectionScreen(navController: NavController, viewModel: AgroViewModel
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // --- Image Upload Section ---
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -122,7 +121,7 @@ fun StressDetectionScreen(navController: NavController, viewModel: AgroViewModel
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -212,10 +211,9 @@ fun StressDetectionScreen(navController: NavController, viewModel: AgroViewModel
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- PREMIUM AI Analysis Result Section ---
             if (stressResult != null) {
                 Column(
                     modifier = Modifier
@@ -223,11 +221,7 @@ fun StressDetectionScreen(navController: NavController, viewModel: AgroViewModel
                         .fillMaxWidth()
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(8.dp)
-                        ) {}
+                        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(8.dp)) {}
                         Spacer(Modifier.width(8.dp))
                         Text(
                             "DIAGNOSIS REPORT",
@@ -237,10 +231,9 @@ fun StressDetectionScreen(navController: NavController, viewModel: AgroViewModel
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // 1. Diagnosis Summary Card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(24.dp),
@@ -254,11 +247,7 @@ fun StressDetectionScreen(navController: NavController, viewModel: AgroViewModel
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column {
-                                    Text(
-                                        "Detected Condition",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = Color.Gray
-                                    )
+                                    Text("Detected Condition", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                                     Text(
                                         stressResult!!.label,
                                         style = MaterialTheme.typography.headlineSmall,
@@ -278,10 +267,7 @@ fun StressDetectionScreen(navController: NavController, viewModel: AgroViewModel
                                     )
                                 }
                             }
-                            
                             Spacer(modifier = Modifier.height(20.dp))
-                            
-                            // Confidence Meter
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("Confidence", style = MaterialTheme.typography.labelSmall, modifier = Modifier.width(70.dp))
                                 LinearProgressIndicator(
@@ -298,7 +284,6 @@ fun StressDetectionScreen(navController: NavController, viewModel: AgroViewModel
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // 2. Comprehensive Advice Section
                     Text(
                         "AI EXPERT RECOMMENDATIONS",
                         style = MaterialTheme.typography.labelMedium,
@@ -311,7 +296,6 @@ fun StressDetectionScreen(navController: NavController, viewModel: AgroViewModel
                         if (lines.isNotEmpty()) {
                             val title = lines[0].replace("**", "").replace(":", "")
                             val content = lines.drop(1).joinToString("\n").trim()
-                            
                             val sectionIcon = when {
                                 title.contains("Symptoms") || title.contains("Pehchan") -> Icons.Default.Visibility
                                 title.contains("Chemical") || title.contains("Rasayanik") -> Icons.Default.Science
@@ -319,7 +303,6 @@ fun StressDetectionScreen(navController: NavController, viewModel: AgroViewModel
                                 title.contains("Prevention") || title.contains("Bachav") -> Icons.Default.Shield
                                 else -> Icons.Default.Info
                             }
-
                             Card(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
                                 shape = RoundedCornerShape(16.dp),
@@ -348,13 +331,9 @@ fun StressDetectionScreen(navController: NavController, viewModel: AgroViewModel
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // 3. High-Impact Action Button
                     Button(
                         onClick = {
-                            val reportText = "*AgroTech AI Diagnosis Report*\n\n" +
-                                    "Issue: ${stressResult!!.label}\n" +
-                                    "Confidence: ${(stressResult!!.confidence * 100).toInt()}%\n\n" +
-                                    "Solution:\n${stressResult!!.treatment}"
+                            val reportText = "*AgroTech AI Diagnosis Report*\n\nIssue: ${stressResult!!.label}\nConfidence: ${(stressResult!!.confidence * 100).toInt()}%\n\nSolution:\n${stressResult!!.treatment}"
                             val intent = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
                                 putExtra(Intent.EXTRA_TEXT, reportText)
@@ -369,35 +348,6 @@ fun StressDetectionScreen(navController: NavController, viewModel: AgroViewModel
                         Icon(Icons.Default.Share, null)
                         Spacer(Modifier.width(12.dp))
                         Text("Share Diagnosis Report", fontWeight = FontWeight.Bold)
-                    }
-                }
-            } else if (!isLoading) {
-                // Empty state card
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                            modifier = Modifier.size(80.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(Icons.Default.ImageSearch, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp))
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            "Ready for diagnosis",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            "Upload a photo to see AI magic",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
                     }
                 }
             }

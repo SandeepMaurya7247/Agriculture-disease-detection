@@ -31,7 +31,7 @@ fun MarketPriceScreen(navController: NavController, viewModel: AgroViewModel) {
     val marketPrices by viewModel.marketPrices.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.errorState.collectAsState()
-    
+
     var searchQuery by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
 
@@ -172,9 +172,9 @@ fun MarketPriceCard(record: MarketRecord) {
             Spacer(Modifier.height(16.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                PriceItem("Min Price", "Γé╣${record.minPrice}", Color(0xFFD32F2F))
-                PriceItem("Modal Price", "Γé╣${record.modalPrice}", MaterialTheme.colorScheme.primary)
-                PriceItem("Max Price", "Γé╣${record.maxPrice}", Color(0xFF388E3C))
+                PriceItem("Min Price", "₹${record.minPrice}", Color(0xFFD32F2F))
+                PriceItem("Modal Price", "₹${record.modalPrice}", MaterialTheme.colorScheme.primary)
+                PriceItem("Max Price", "₹${record.maxPrice}", Color(0xFF388E3C))
             }
         }
     }

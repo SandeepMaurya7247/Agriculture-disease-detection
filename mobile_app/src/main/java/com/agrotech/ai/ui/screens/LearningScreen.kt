@@ -87,10 +87,7 @@ fun LearningScreen(navController: NavController, viewModel: AgroViewModel) {
                 .fillMaxSize()
         ) {
             items(lessons) { lesson ->
-                // Regular users only see APPROVED videos + their own PENDING ones
-                // Admins see EVERYTHING
                 val shouldShow = isAdmin || lesson.status == "APPROVED" || lesson.uploadedBy == userState?.email
-                
                 if (shouldShow) {
                     LessonItem(
                         lesson = lesson, 
@@ -154,7 +151,7 @@ fun LessonItem(lesson: VideoLesson, isAdmin: Boolean, onApprove: () -> Unit, onP
                     Text(text = lesson.duration, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                 }
             }
-            
+
             if (isAdmin && lesson.status == "PENDING") {
                 Button(
                     onClick = onApprove,
@@ -178,13 +175,11 @@ fun VideoPlayerDialog(videoUri: String, onDismiss: () -> Unit) {
             playWhenReady = true
         }
     }
-
     DisposableEffect(Unit) {
         onDispose {
             exoPlayer.release()
         }
     }
-
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -203,7 +198,6 @@ fun VideoPlayerDialog(videoUri: String, onDismiss: () -> Unit) {
                     },
                     modifier = Modifier.fillMaxWidth().aspectRatio(16/9f)
                 )
-                
                 IconButton(
                     onClick = onDismiss,
                     modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)

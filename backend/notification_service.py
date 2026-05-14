@@ -22,13 +22,13 @@ class NotificationService:
             try:
                 cred = credentials.Certificate(key_path)
                 firebase_admin.initialize_app(cred)
-                print("✅ Firebase Admin initialized successfully.")
+                print("[OK] Firebase Admin initialized successfully.")
                 self.is_mock = False
             except Exception as e:
-                print(f"❌ Firebase Initialization Error: {e}")
+                print(f"[ERROR] Firebase Initialization Error: {e}")
                 self.is_mock = True
         else:
-            print("⚠️ firebase-key.json not found. Running in MOCK mode (Console only).")
+            print("[WARN] firebase-key.json not found. Running in MOCK mode (Console only).")
             self.is_mock = True
 
     def send_to_topic(self, topic, title, body):
